@@ -1,7 +1,7 @@
 const ITEMS = [
   { label: 'Disponible', bg: 'var(--state-available-bg)', bd: 'var(--state-available-bd)' },
   { label: 'En espera', bg: 'var(--state-pending-bg)', bd: 'var(--state-pending-bd)' },
-  { label: 'Reservado', bg: 'var(--state-booked-bg)', bd: 'var(--state-booked-bd)' },
+  { label: 'Reservado', bg: 'var(--red-50)', bd: 'var(--red-100)' },
   { label: 'Bloqueado', bg: 'var(--state-blocked-bg)', bd: 'var(--state-blocked-bd)' },
 ] as const
 

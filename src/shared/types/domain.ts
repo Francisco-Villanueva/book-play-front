@@ -36,6 +36,13 @@ export interface Business {
   createdAt: string
 }
 
+export interface PublicBusiness {
+  id: string
+  name: string
+  address?: string | null
+  description?: string | null
+}
+
 export interface BusinessSearchResult {
   id: string
   name: string
@@ -113,6 +120,23 @@ export interface AvailableSlots {
   courtId: string
   slotDuration: number
   availableSlots: { startTime: string; endTime: string }[]
+}
+
+export interface CourtAvailabilitySummary {
+  courtId: string
+  name: string
+  sportType: string | null
+  surface: string | null
+  pricePerHour: number | null
+  availableSlots: { startTime: string; endTime: string }[]
+  nextAvailable: string | null
+  isFull: boolean
+}
+
+export interface BusinessAvailability {
+  date: string
+  slotDuration: number
+  courts: CourtAvailabilitySummary[]
 }
 
 export interface Plan {

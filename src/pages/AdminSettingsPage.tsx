@@ -8,7 +8,7 @@ import { BillingSettingsPanel } from '@/features/billing/components/BillingSetti
 import { useBusiness, useUpdateBusiness } from '@/features/businesses/hooks/useBusinesses'
 import { useCourts } from '@/features/courts/hooks/useCourts'
 import {
-  useAvailabilityRules, useCreateAvailabilityRule, useDeleteAvailabilityRule,
+  useAvailabilityRules, useCreateAvailabilityRulesBatch, useDeleteAvailabilityRule,
 } from '@/features/availability-rules/hooks/useAvailabilityRules'
 import {
   useExceptionRules, useCreateExceptionRule, useDeleteExceptionRule,
@@ -182,7 +182,7 @@ function SchedulePreview({ groups }: { groups: RuleGroup[] }) {
 function ScheduleTab({ businessId }: { businessId: string }) {
   const { data: rules, isLoading, isError } = useAvailabilityRules(businessId)
   const { data: courts } = useCourts(businessId)
-  const createRule = useCreateAvailabilityRule(businessId)
+  const createRules = useCreateAvailabilityRulesBatch(businessId)
   const deleteRule = useDeleteAvailabilityRule(businessId)
 
   const groups = useMemo(() => groupRules(rules ?? []), [rules])
@@ -197,17 +197,15 @@ function ScheduleTab({ businessId }: { businessId: string }) {
   const sFld: React.CSSProperties = { padding: '8px 10px', borderRadius: 'var(--r-md)', border: '1.5px solid var(--border-default)', background: 'var(--surface-card)', fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text-strong)', cursor: 'pointer', outline: 'none' }
 
   const handleAdd = () => {
-    Promise.all(
-      newDays.map((day) =>
-        createRule.mutateAsync({
-          name: `Horario ${CFG_DAYS[day]!.slice(0, 3)}`,
-          dayOfWeek: day,
-          startTime: from,
-          endTime: to,
-          courtIds: allCourtIds,
-        }),
-      ),
-    ).then(() => { setAdding(false); setNewDays([]) })
+    createRules
+      .mutateAsync({
+        name: 'Horario de atención',
+        daysOfWeek: newDays,
+        startTime: from,
+        endTime: to,
+        courtIds: allCourtIds,
+      })
+      .then(() => { setAdding(false); setNewDays([]) })
   }
 
   const handleDeleteGroup = (group: RuleGroup) => {
@@ -283,11 +281,11 @@ function ScheduleTab({ businessId }: { businessId: string }) {
             <button type="button" onClick={() => setAdding(false)} style={{ padding: '8px 16px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-default)', background: 'transparent', cursor: 'pointer', fontSize: 13, color: 'var(--text-muted)' }}>Cancelar</button>
             <button
               type="button"
-              disabled={newDays.length === 0 || createRule.isPending}
+              disabled={newDays.length === 0 || createRules.isPending}
               onClick={handleAdd}
               style={{ padding: '8px 18px', borderRadius: 'var(--r-md)', border: 'none', background: newDays.length > 0 ? 'var(--action-primary)' : 'var(--ink-200)', color: 'white', cursor: newDays.length > 0 ? 'pointer' : 'default', fontSize: 13, fontWeight: 700 }}
             >
-              {createRule.isPending ? 'Guardando…' : 'Guardar regla'}
+              {createRules.isPending ? 'Guardando…' : 'Guardar regla'}
             </button>
           </div>
         </div>

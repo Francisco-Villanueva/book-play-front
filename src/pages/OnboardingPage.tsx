@@ -318,17 +318,13 @@ function Step3({
 
   const createRules = useMutation({
     mutationFn: (data: AvailabilityWizardFormData) =>
-      Promise.all(
-        data.days.map((day) =>
-          availabilityRulesApi.create(businessId, {
-            name: `Horario ${DAYS_SHORT[day]}`,
-            dayOfWeek: day,
-            startTime: data.startTime,
-            endTime: data.endTime,
-            courtIds: [courtId],
-          }),
-        ),
-      ),
+      availabilityRulesApi.createBatch(businessId, {
+        name: 'Horario de atención',
+        daysOfWeek: data.days,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        courtIds: [courtId],
+      }),
     onSuccess: onFinish,
   })
 

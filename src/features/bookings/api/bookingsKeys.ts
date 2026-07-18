@@ -5,4 +5,6 @@ export const bookingsKeys = {
   detail: (businessId: string, bookingId: string) => ['bookings', businessId, bookingId] as const,
   availability: (businessId: string, courtId: string, date: string) =>
     ['bookings', businessId, 'availability', courtId, date] as const,
+  businessAvailability: (businessId: string, date: string) =>
+    ['bookings', businessId, 'availability', 'all', date] as const,
 }

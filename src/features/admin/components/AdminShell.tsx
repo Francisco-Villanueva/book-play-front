@@ -23,9 +23,10 @@ import { TrialBanner } from "@/shared/components/TrialBanner";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useAdminStore } from "../store/adminStore";
 import { useCourts } from "@/features/courts/hooks/useCourts";
+import { useSubscription } from "@/features/billing/hooks/useBilling";
 import { courtColor } from "./courtTypes";
 import { NewBookingModal } from "./NewBookingModal";
-import { todayISO, formatLongDateEs } from "@/shared/utils/date";
+import { todayISO } from "@/shared/utils/date";
 
 const NAV = [
   { key: "resumen", icon: LayoutDashboard, label: "Resumen", path: "" },
@@ -61,9 +62,21 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
   const { pathname } = useLocation();
   const { user, logout } = useAuthStore();
   const { sidebarOpen } = useAdminStore();
-  const [trialBannerVisible, setTrialBannerVisible] = useState(true);
+  const [trialBannerDismissed, setTrialBannerDismissed] = useState(false);
   const [newBookingOpen, setNewBookingOpen] = useState(false);
-  const TRIAL_DAYS_LEFT = 14;
+
+  const { data: subscription } = useSubscription(businessId);
+  const isTrial = subscription?.status === "TRIALING";
+  const trialDaysLeft = subscription
+    ? Math.max(
+        0,
+        Math.ceil(
+          (new Date(subscription.trialEndsAt).getTime() - Date.now()) /
+            86_400_000,
+        ),
+      )
+    : 0;
+  const showTrialBanner = isTrial && !trialBannerDismissed;
 
   const base = `/admin/${businessId}`;
   const activeBusiness = user?.businesses?.find((b) => b.id === businessId);
@@ -205,11 +218,11 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
           </div>
         </header>
 
-        {trialBannerVisible && (
+        {showTrialBanner && (
           <TrialBanner
-            daysLeft={TRIAL_DAYS_LEFT}
+            daysLeft={trialDaysLeft}
             onUpgrade={() => navigate(`/admin/${businessId}/upgrade`)}
-            onDismiss={() => setTrialBannerVisible(false)}
+            onDismiss={() => setTrialBannerDismissed(true)}
           />
         )}
 
@@ -220,7 +233,6 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
         <NewBookingModal
           businessId={businessId}
           date={today}
-          dateLabel={formatLongDateEs(today)}
           courts={courts}
           courtPrices={courtPrices}
           onClose={() => setNewBookingOpen(false)}

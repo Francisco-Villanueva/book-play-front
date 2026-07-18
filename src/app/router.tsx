@@ -23,6 +23,7 @@ import PublicBookingPage from '@/pages/PublicBookingPage'
 import OnboardingPage from '@/pages/OnboardingPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import UnauthorizedPage from '@/pages/UnauthorizedPage'
+import ErrorPage from '@/pages/ErrorPage'
 import MasterAccountsPage from '@/pages/MasterAccountsPage'
 import MasterAccountDetailPage from '@/pages/MasterAccountDetailPage'
 import MasterFeaturesPage from '@/pages/MasterFeaturesPage'
@@ -47,6 +48,7 @@ function RootRedirect() {
 export const router = createBrowserRouter([
   {
     element: <AppInitializer />,
+    errorElement: <ErrorPage />,
     children: [
       // Root redirect — detects auth state and sends to the right place
       { index: true, element: <RootRedirect /> },

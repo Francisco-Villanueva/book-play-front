@@ -10,18 +10,18 @@ export function useAvailabilityRules(businessId: string | undefined) {
   })
 }
 
-interface AvailabilityRuleInput {
-  name: string
-  dayOfWeek: number
+interface AvailabilityRulesBatchInput {
+  name?: string
+  daysOfWeek: number[]
   startTime: string
   endTime: string
   courtIds?: string[]
 }
 
-export function useCreateAvailabilityRule(businessId: string) {
+export function useCreateAvailabilityRulesBatch(businessId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: AvailabilityRuleInput) => availabilityRulesApi.create(businessId, data),
+    mutationFn: (data: AvailabilityRulesBatchInput) => availabilityRulesApi.createBatch(businessId, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: availabilityRulesKeys.all(businessId) }),
   })
 }

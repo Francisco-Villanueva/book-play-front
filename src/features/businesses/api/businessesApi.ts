@@ -1,5 +1,5 @@
 import { apiClient } from '@/shared/lib/apiClient'
-import type { Business, BusinessSearchResult } from '@/shared/types/domain'
+import type { Business, BusinessSearchResult, PublicBusiness } from '@/shared/types/domain'
 
 interface CreateBusinessPayload {
   name: string
@@ -36,6 +36,9 @@ export const businessesApi = {
     apiClient.get<BusinessSearchResult[]>('/businesses/search', { params: q ? { q } : {} }),
 
   getById: (businessId: string) => apiClient.get<Business>(`/businesses/${businessId}`),
+
+  getPublicById: (businessId: string) =>
+    apiClient.get<PublicBusiness>(`/businesses/${businessId}/public`),
 
   create: (data: CreateBusinessPayload) =>
     apiClient.post<CreateBusinessResponse>('/businesses', data),

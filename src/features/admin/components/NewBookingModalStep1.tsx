@@ -9,7 +9,10 @@ interface TimeOption {
 interface NewBookingModalStep1Props {
   courts: AgendaCourt[]
   courtPrices: Record<string, number>
+  date: string
+  setDate: (date: string) => void
   dateLabel: string
+  minDate: string
   cid: string | null
   setCid: (cid: string) => void
   startH: number | null
@@ -23,7 +26,7 @@ const TIME_OPTS: TimeOption[] = Array.from({ length: HOUR_END - HOUR_START + 1 }
   label: `${String(HOUR_START + i).padStart(2, '0')}:00`,
 }))
 
-export function NewBookingModalStep1({ courts, courtPrices, dateLabel, cid, setCid, startH, setStartH, endH, setEndH }: NewBookingModalStep1Props) {
+export function NewBookingModalStep1({ courts, courtPrices, date, setDate, dateLabel, minDate, cid, setCid, startH, setStartH, endH, setEndH }: NewBookingModalStep1Props) {
   const dur = startH != null && endH != null && endH > startH ? endH - startH : 0
   const court = courts.find((c) => c.id === cid)
   const rawPrice = cid && dur > 0 ? (courtPrices[cid] ?? 0) * dur : null
@@ -66,9 +69,18 @@ export function NewBookingModalStep1({ courts, courtPrices, dateLabel, cid, setC
 
       <div className="mb-4">
         <p className="text-[12px] font-bold uppercase tracking-wide text-ink-400 mb-2">Fecha</p>
-        <div className="px-3.5 py-2.5 rounded-md bg-ink-50 border border-ink-100 flex items-center justify-between">
-          <span className="text-[14px] font-semibold text-ink-900">{dateLabel}</span>
-        </div>
+        <label className="px-3.5 py-2.5 rounded-md bg-ink-50 border border-ink-100 flex items-center justify-between gap-3 cursor-pointer focus-within:border-green-500">
+          <input
+            type="date"
+            value={date}
+            min={minDate}
+            onChange={(e) => e.target.value && setDate(e.target.value)}
+            aria-label="Fecha del turno"
+            className="bg-transparent border-none outline-none text-[14px] font-semibold text-ink-900 cursor-pointer"
+            data-testid="new-booking-date"
+          />
+          <span className="text-[13px] text-ink-500 capitalize truncate">{dateLabel}</span>
+        </label>
       </div>
 
       <div>

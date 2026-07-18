@@ -1,5 +1,5 @@
 import { apiClient } from '@/shared/lib/apiClient'
-import type { AvailableSlots, Booking } from '@/shared/types/domain'
+import type { AvailableSlots, Booking, BusinessAvailability } from '@/shared/types/domain'
 
 export const bookingsApi = {
   listByBusiness: (businessId: string) =>
@@ -18,6 +18,11 @@ export const bookingsApi = {
   getAvailability: (businessId: string, courtId: string, date: string) =>
     apiClient.get<AvailableSlots>(`/businesses/${businessId}/bookings/availability`, {
       params: { courtId, date },
+    }),
+
+  getBusinessAvailability: (businessId: string, date: string) =>
+    apiClient.get<BusinessAvailability>(`/businesses/${businessId}/bookings/availability/all`, {
+      params: { date },
     }),
 
   createBooking: (

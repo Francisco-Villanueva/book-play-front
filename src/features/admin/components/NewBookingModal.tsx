@@ -6,12 +6,12 @@ import { NewBookingModalStep2, type BookingModalType } from './NewBookingModalSt
 import { useCreateBooking } from '@/features/bookings/hooks/useBookings'
 import { useCreateExceptionRule } from '@/features/exception-rules/hooks/useExceptionRules'
 import { getApiErrorMessage } from '@/shared/utils/apiError'
+import { formatLongDateEs, todayISO } from '@/shared/utils/date'
 import { hFmt, type AgendaCourt, type BookingPrefill } from './agendaTypes'
 
 interface NewBookingModalProps {
   businessId: string
   date: string
-  dateLabel: string
   courts: AgendaCourt[]
   courtPrices: Record<string, number>
   prefill?: BookingPrefill
@@ -19,9 +19,11 @@ interface NewBookingModalProps {
   onSaved: () => void
 }
 
-export function NewBookingModal({ businessId, date, dateLabel, courts, courtPrices, prefill, onClose, onSaved }: NewBookingModalProps) {
+export function NewBookingModal({ businessId, date: initialDate, courts, courtPrices, prefill, onClose, onSaved }: NewBookingModalProps) {
   const hasPrefill = prefill?.cid != null && prefill?.startH != null
 
+  const [date, setDate] = useState(initialDate)
+  const dateLabel = formatLongDateEs(date)
   const [step, setStep] = useState(hasPrefill ? 2 : 1)
   const [cid, setCid] = useState<string | null>(prefill?.cid ?? null)
   const [startH, setStartH] = useState<number | null>(prefill?.startH ?? null)
@@ -113,7 +115,10 @@ export function NewBookingModal({ businessId, date, dateLabel, courts, courtPric
             <NewBookingModalStep1
               courts={courts}
               courtPrices={courtPrices}
+              date={date}
+              setDate={setDate}
               dateLabel={dateLabel}
+              minDate={todayISO()}
               cid={cid}
               setCid={setCid}
               startH={startH}

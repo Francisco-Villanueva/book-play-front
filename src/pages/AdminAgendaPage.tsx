@@ -141,7 +141,6 @@ export default function AdminAgendaPage() {
         <NewBookingModal
           businessId={businessId}
           date={date}
-          dateLabel={formatLongDateEs(date)}
           courts={courts}
           courtPrices={courtPrices}
           prefill={modalPrefill}
