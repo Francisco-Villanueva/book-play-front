@@ -70,3 +70,26 @@ export function useCancelBooking(businessId: string) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: bookingsKeys.all(businessId) }),
   })
 }
+
+export function useGuestCancellation(
+  businessId: string | undefined,
+  bookingId: string | undefined,
+  token: string | undefined,
+) {
+  return useQuery({
+    queryKey: bookingsKeys.guestCancellation(businessId ?? '', bookingId ?? '', token ?? ''),
+    queryFn: () => bookingsApi.getGuestCancellation(businessId!, bookingId!, token!).then((res) => res.data),
+    enabled: !!businessId && !!bookingId && !!token,
+    retry: false,
+  })
+}
+
+export function useCancelGuestBooking(businessId: string | undefined, bookingId: string | undefined) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (token: string) => bookingsApi.cancelGuestBooking(businessId!, bookingId!, token),
+    onSuccess: (_res, token) => {
+      queryClient.invalidateQueries({ queryKey: bookingsKeys.guestCancellation(businessId!, bookingId!, token) })
+    },
+  })
+}

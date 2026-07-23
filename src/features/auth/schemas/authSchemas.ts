@@ -16,5 +16,20 @@ export const registerSchema = z.object({
   message: 'Las contraseñas no coinciden',
 })
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('Ingresá un email válido'),
+})
+
+// 8 caracteres para coincidir con la validación del backend (MinLength(8)).
+export const resetPasswordSchema = z.object({
+  newPassword: z.string().min(8, 'Mínimo 8 caracteres'),
+  confirmPassword: z.string().min(8, 'Mínimo 8 caracteres'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  path: ['confirmPassword'],
+  message: 'Las contraseñas no coinciden',
+})
+
 export type LoginFormData = z.infer<typeof loginSchema>
 export type RegisterFormData = z.infer<typeof registerSchema>
+export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
+export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>

@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { Check, ChevronRight } from 'lucide-react'
 import { Button } from '@/shared/components/Button'
 import { Input } from '@/shared/components/Input'
+import { PhoneInput } from '@/shared/components/PhoneInput'
 import { Switch } from '@/shared/components/Switch'
 import { cn } from '@/shared/utils/cn'
 import { getApiErrorMessage } from '@/shared/utils/apiError'
@@ -45,6 +46,7 @@ function Step1({ onNext }: { onNext: (businessId: string) => void }) {
     handleSubmit,
     watch,
     setValue,
+    control,
     formState: { errors },
   } = useForm<CreateBusinessFormData>({
     resolver: zodResolver(createBusinessSchema),
@@ -86,7 +88,19 @@ function Step1({ onNext }: { onNext: (businessId: string) => void }) {
           />
           <Input label="Dirección" placeholder="Av. Libertad 1850, Palermo, CABA" {...register('address')} />
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Teléfono" placeholder="+54 11 4567-8901" type="tel" {...register('phone')} />
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <PhoneInput
+                  label="Teléfono"
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.phone?.message}
+                />
+              )}
+            />
             <Input
               label="Email de contacto"
               placeholder="info@micomplejo.com"

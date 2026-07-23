@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { authApi } from '../api/authApi'
 import { useAuthStore } from '../store/authStore'
 import type { User } from '@/shared/types/domain'
-import type { LoginFormData, RegisterFormData } from '../schemas/authSchemas'
+import type {
+  ForgotPasswordFormData,
+  LoginFormData,
+  RegisterFormData,
+} from '../schemas/authSchemas'
 
 // A user can be PLAYER globally and still own/manage a business (BusinessUser role).
 // Business administration takes priority over the player app as the landing view.
@@ -46,6 +50,21 @@ export function useRegister() {
       setAuth(data.user, data.accessToken)
       navigate(variables.asBusiness ? '/onboarding' : getPostLoginPath(data.user), { replace: true })
     },
+  })
+}
+
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: (data: ForgotPasswordFormData) => authApi.forgotPassword(data.email),
+  })
+}
+
+// El endpoint no devuelve sesión: tras el reset el usuario ingresa con la
+// contraseña nueva, así que la pantalla confirma y ofrece ir al login.
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: ({ token, newPassword }: { token: string; newPassword: string }) =>
+      authApi.resetPassword(token, newPassword),
   })
 }
 

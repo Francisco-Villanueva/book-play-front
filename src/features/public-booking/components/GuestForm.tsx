@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { Lock } from 'lucide-react'
 import { Button } from '@/shared/components/Button'
 import { Input } from '@/shared/components/Input'
+import { PhoneInput } from '@/shared/components/PhoneInput'
 import { useCreateBooking } from '@/features/bookings/hooks/useBookings'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { getApiErrorMessage } from '@/shared/utils/apiError'
 import { formatMoneyARS, relativeDayLabel } from '@/shared/utils/date'
+import { isValidArgentinePhone } from '@/shared/utils/phone'
 import type { Court } from '@/shared/types/domain'
 import { courtColor, humanizeSport } from '../lib'
 import type { Player } from '../types'
@@ -25,7 +27,7 @@ export function GuestForm({ businessId, court, date, startTime, endTime, onBack,
   const { user } = useAuthStore()
   const [name, setName] = useState(user?.name ?? '')
   const [phone, setPhone] = useState(user?.phone ?? '')
-  const valid = name.trim().length >= 2 && phone.replace(/\D/g, '').length >= 8
+  const valid = name.trim().length >= 2 && isValidArgentinePhone(phone)
   const createBooking = useCreateBooking(businessId)
 
   const handleConfirm = () => {
@@ -75,12 +77,10 @@ export function GuestForm({ businessId, court, date, startTime, endTime, onBack,
           onChange={(e) => setName(e.target.value)}
           required
         />
-        <Input
+        <PhoneInput
           label="Teléfono"
-          placeholder="+54 9 11 1234-5678"
-          type="tel"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          onChange={setPhone}
           required
           helperText="El complejo te puede contactar por este número."
         />

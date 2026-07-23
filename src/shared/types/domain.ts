@@ -95,6 +95,16 @@ export interface Booking {
   createdAt: string
 }
 
+export interface GuestCancellationInfo {
+  id: string
+  status: BookingStatus
+  businessName: string
+  courtName: string
+  date: string
+  startTime: string
+  endTime: string
+}
+
 export interface AvailabilityRule {
   id: string
   name: string

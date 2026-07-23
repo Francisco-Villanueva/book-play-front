@@ -9,9 +9,10 @@ import { getApiErrorMessage } from '@/shared/utils/apiError'
 
 interface LoginScreenProps {
   onRegister: () => void
+  onForgotPassword: () => void
 }
 
-export function LoginScreen({ onRegister }: LoginScreenProps) {
+export function LoginScreen({ onRegister, onForgotPassword }: LoginScreenProps) {
   const login = useLogin()
 
   const {
@@ -52,7 +53,11 @@ export function LoginScreen({ onRegister }: LoginScreenProps) {
         />
 
         <div className="text-right">
-          <button type="button" className="text-caption font-semibold text-green-600 bg-transparent border-none cursor-pointer">
+          <button
+            type="button"
+            onClick={onForgotPassword}
+            className="text-caption font-semibold text-green-600 bg-transparent border-none cursor-pointer"
+          >
             Olvidé mi contraseña
           </button>
         </div>

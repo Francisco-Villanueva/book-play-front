@@ -1,5 +1,5 @@
 import { apiClient } from '@/shared/lib/apiClient'
-import type { AvailableSlots, Booking, BusinessAvailability } from '@/shared/types/domain'
+import type { AvailableSlots, Booking, BusinessAvailability, GuestCancellationInfo } from '@/shared/types/domain'
 
 export const bookingsApi = {
   listByBusiness: (businessId: string) =>
@@ -40,4 +40,16 @@ export const bookingsApi = {
 
   cancelBooking: (businessId: string, bookingId: string) =>
     apiClient.patch<Booking>(`/businesses/${businessId}/bookings/${bookingId}/cancel`),
+
+  getGuestCancellation: (businessId: string, bookingId: string, token: string) =>
+    apiClient.get<GuestCancellationInfo>(
+      `/businesses/${businessId}/bookings/${bookingId}/guest-cancellation`,
+      { params: { token } },
+    ),
+
+  cancelGuestBooking: (businessId: string, bookingId: string, token: string) =>
+    apiClient.patch<Booking>(
+      `/businesses/${businessId}/bookings/${bookingId}/guest-cancellation`,
+      { token },
+    ),
 }

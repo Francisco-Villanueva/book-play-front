@@ -1,4 +1,5 @@
 import { Input } from '@/shared/components/Input'
+import { PhoneInput } from '@/shared/components/PhoneInput'
 import { SegmentedControl } from '@/shared/components/SegmentedControl'
 import { HOUR_END, type AgendaCourt } from './agendaTypes'
 
@@ -77,7 +78,7 @@ export function NewBookingModalStep2({
           <p className="text-[12px] font-bold uppercase tracking-wide text-ink-400 mb-2.5">Datos del jugador</p>
           <div className="flex flex-col gap-3.5">
             <Input label="Nombre completo" placeholder="Ej: Martín Gómez" value={name} onChange={(e) => setName(e.target.value)} required />
-            <Input label="Teléfono" placeholder="+54 9 11 1234-5678" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+            <PhoneInput label="Teléfono" value={phone} onChange={setPhone} required />
             <Input label="Nota (opcional)" placeholder="Pago por transferencia, etc." value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
         </>

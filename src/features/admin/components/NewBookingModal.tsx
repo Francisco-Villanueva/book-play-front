@@ -7,6 +7,7 @@ import { useCreateBooking } from '@/features/bookings/hooks/useBookings'
 import { useCreateExceptionRule } from '@/features/exception-rules/hooks/useExceptionRules'
 import { getApiErrorMessage } from '@/shared/utils/apiError'
 import { formatLongDateEs, todayISO } from '@/shared/utils/date'
+import { isValidArgentinePhone } from '@/shared/utils/phone'
 import { hFmt, type AgendaCourt, type BookingPrefill } from './agendaTypes'
 
 interface NewBookingModalProps {
@@ -44,7 +45,7 @@ export function NewBookingModal({ businessId, date: initialDate, courts, courtPr
 
   const step1Ok = cid != null && startH != null && endH != null && endH > startH
   const step2Ok = type === 'booking'
-    ? name.trim().length >= 2 && phone.replace(/\D/g, '').length >= 8
+    ? name.trim().length >= 2 && isValidArgentinePhone(phone)
     : startH != null && endH != null && endH > startH
 
   const handleSave = () => {

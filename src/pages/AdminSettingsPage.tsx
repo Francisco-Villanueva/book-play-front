@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Clock, Trash2, Plus, CheckCircle, Building2, CalendarOff, CreditCard } from 'lucide-react'
 import { AdminShell } from '@/features/admin/components/AdminShell'
 import { Button } from '@/shared/components/Button'
+import { PhoneInput } from '@/shared/components/PhoneInput'
 import { cn } from '@/shared/utils/cn'
 import { BillingSettingsPanel } from '@/features/billing/components/BillingSettingsPanel'
 import { useBusiness, useUpdateBusiness } from '@/features/businesses/hooks/useBusinesses'
@@ -78,10 +79,7 @@ function GeneralTab({ businessId }: { businessId: string }) {
             <input style={cfgFld} value={form.address} onChange={(e) => upd('address', e.target.value)} aria-label="Dirección" />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label style={cfgLbl}>Teléfono</label>
-              <input type="tel" style={cfgFld} value={form.phone} onChange={(e) => upd('phone', e.target.value)} aria-label="Teléfono" />
-            </div>
+            <PhoneInput label="Teléfono" value={form.phone} onChange={(v) => upd('phone', v)} />
             <div>
               <label style={cfgLbl}>Email</label>
               <input type="email" style={cfgFld} value={form.email} onChange={(e) => upd('email', e.target.value)} aria-label="Email" />

@@ -5,6 +5,8 @@ import { AppInitializer } from '@/app/AppInitializer'
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute'
 import LoginPage from '@/pages/LoginPage'
 import RegisterPage from '@/pages/RegisterPage'
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
+import ResetPasswordPage from '@/pages/ResetPasswordPage'
 import DashboardPage from '@/pages/DashboardPage'
 import BookCourtPage from '@/pages/BookCourtPage'
 import ConfirmBookingPage from '@/pages/ConfirmBookingPage'
@@ -20,6 +22,7 @@ import AdminReservationsPage from '@/pages/AdminReservationsPage'
 import AdminClientsPage from '@/pages/AdminClientsPage'
 import AdminSettingsPage from '@/pages/AdminSettingsPage'
 import PublicBookingPage from '@/pages/PublicBookingPage'
+import GuestBookingCancelPage from '@/pages/GuestBookingCancelPage'
 import OnboardingPage from '@/pages/OnboardingPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import UnauthorizedPage from '@/pages/UnauthorizedPage'
@@ -56,7 +59,10 @@ export const router = createBrowserRouter([
       // Public — no auth required
       { path: '/login',                         element: <LoginPage /> },
       { path: '/register',                      element: <RegisterPage /> },
+      { path: '/forgot-password',               element: <ForgotPasswordPage /> },
+      { path: '/reset-password',                element: <ResetPasswordPage /> },
       { path: '/businesses/:businessId/book',   element: <PublicBookingPage /> },
+      { path: '/businesses/:businessId/bookings/:bookingId/cancel', element: <GuestBookingCancelPage /> },
       { path: '/unauthorized',                  element: <UnauthorizedPage /> },
 
       // Requires authentication — any logged-in user

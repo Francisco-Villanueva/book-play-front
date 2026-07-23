@@ -19,4 +19,11 @@ export const authApi = {
     apiClient
       .get<{ user: User }>('/users/me')
       .then((response) => ({ ...response, data: response.data.user })),
+
+  // Always resolves 200 with a generic message, exista o no la cuenta.
+  forgotPassword: (email: string) =>
+    apiClient.post<{ message: string }>('/auth/forgot-password', { email }),
+
+  resetPassword: (token: string, newPassword: string) =>
+    apiClient.post<{ message: string }>('/auth/reset-password', { token, newPassword }),
 }

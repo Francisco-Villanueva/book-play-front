@@ -7,4 +7,6 @@ export const bookingsKeys = {
     ['bookings', businessId, 'availability', courtId, date] as const,
   businessAvailability: (businessId: string, date: string) =>
     ['bookings', businessId, 'availability', 'all', date] as const,
+  guestCancellation: (businessId: string, bookingId: string, token: string) =>
+    ['bookings', businessId, bookingId, 'guest-cancellation', token] as const,
 }
