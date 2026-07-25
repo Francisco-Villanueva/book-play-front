@@ -8,7 +8,8 @@ interface CreateBusinessPayload {
   phone?: string
   email?: string
   timezone: string
-  slotDuration: number
+  defaultSlotDuration: number
+  defaultPricePerSlot?: number
 }
 
 interface CreateBusinessResponse {
@@ -21,8 +22,9 @@ interface UpdateBusinessPayload {
   address?: string
   phone?: string
   email?: string
-  timezone?: string
-  slotDuration?: number
+  timezone?: string | undefined
+  defaultSlotDuration?: number | undefined
+  defaultPricePerSlot?: number | null | undefined
 }
 
 interface UpdateBusinessResponse {

@@ -115,10 +115,10 @@ function CourtCard({
             {humanizeSport(court.sportType)}{court.surface ? ` · ${court.surface}` : ''}
           </p>
         </div>
-        {court.pricePerHour != null && (
+        {court.pricePerSlot != null && (
           <div className="text-right flex-none">
-            <p className="font-mono font-bold text-[15px] text-ink-900">{formatMoneyARS(court.pricePerHour)}</p>
-            <p className="text-[10px] text-ink-400 mt-0.5">por hora</p>
+            <p className="font-mono font-bold text-[15px] text-ink-900">{formatMoneyARS(court.pricePerSlot)}</p>
+            <p className="text-[10px] text-ink-400 mt-0.5">por turno</p>
           </div>
         )}
       </div>

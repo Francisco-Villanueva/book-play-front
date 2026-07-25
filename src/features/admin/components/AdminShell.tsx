@@ -98,7 +98,12 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
   );
   const courtPrices = useMemo(() => {
     const map: Record<string, number> = {};
-    for (const c of rawCourts ?? []) map[c.id] = c.pricePerHour ?? 0;
+    for (const c of rawCourts ?? []) map[c.id] = c.pricePerSlot ?? 0;
+    return map;
+  }, [rawCourts]);
+  const courtDurations = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const c of rawCourts ?? []) map[c.id] = c.slotDuration;
     return map;
   }, [rawCourts]);
   const today = todayISO();
@@ -235,6 +240,7 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
           date={today}
           courts={courts}
           courtPrices={courtPrices}
+          courtDurations={courtDurations}
           onClose={() => setNewBookingOpen(false)}
           onSaved={() => setNewBookingOpen(false)}
         />

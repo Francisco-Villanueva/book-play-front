@@ -40,7 +40,7 @@ export function GuestForm({ businessId, court, date, startTime, endTime, onBack,
   const rows = [
     { k: 'Fecha', v: relativeDayLabel(date) },
     { k: 'Horario', v: `${startTime} – ${endTime} hs`, mono: true },
-    ...(court.pricePerHour != null ? [{ k: 'Precio', v: formatMoneyARS(court.pricePerHour), mono: true }] : []),
+    ...(court.pricePerSlot != null ? [{ k: 'Precio', v: formatMoneyARS(court.pricePerSlot), mono: true }] : []),
   ]
 
   return (

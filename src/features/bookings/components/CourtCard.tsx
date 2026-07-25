@@ -63,7 +63,7 @@ export function CourtCard({
         {price && (
           <div className="text-right flex-none">
             <p className="font-mono font-bold text-body-sm text-ink-900 [font-variant-numeric:tabular-nums]">{price}</p>
-            <p className="text-overline text-ink-400 mt-0.5">por hora</p>
+            <p className="text-overline text-ink-400 mt-0.5">por turno</p>
           </div>
         )}
       </div>

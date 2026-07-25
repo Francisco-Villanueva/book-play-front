@@ -104,8 +104,8 @@ export function SummarySidebar({ businessName, address, step, court, startTime, 
             <Row icon={<Activity size={13} />} label="Deporte" value={humanizeSport(court.sportType)} />
             {court.surface && <Row icon={<Layers size={13} />} label="Piso" value={court.surface} />}
             {startTime && endTime && <Row icon={<Clock size={13} />} label="Horario" value={`${startTime} – ${endTime} hs`} mono />}
-            {court.pricePerHour != null && (
-              <Row icon={<Banknote size={13} />} label="Precio" value={`${formatMoneyARS(court.pricePerHour)} /h`} mono last />
+            {court.pricePerSlot != null && (
+              <Row icon={<Banknote size={13} />} label="Precio" value={formatMoneyARS(court.pricePerSlot)} mono last />
             )}
           </>
         ) : (

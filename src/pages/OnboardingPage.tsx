@@ -37,10 +37,16 @@ const SPORTS_SLUGS: Record<string, string> = {
 }
 const SURFACES = ['Césped sintético', 'Parqué', 'Cristal panorámico', 'Hormigón', 'Polvo de ladrillo', 'Otro']
 const DURATIONS = [30, 60, 90, 120] as const
+
+interface CourtDefaults {
+  businessId: string
+  slotDuration: (typeof DURATIONS)[number]
+  pricePerSlot: string
+}
 const DAYS_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
 // ── Step 1 ────────────────────────────────────────────────────────
-function Step1({ onNext }: { onNext: (businessId: string) => void }) {
+function Step1({ onNext }: { onNext: (defaults: CourtDefaults) => void }) {
   const {
     register,
     handleSubmit,
@@ -50,25 +56,30 @@ function Step1({ onNext }: { onNext: (businessId: string) => void }) {
     formState: { errors },
   } = useForm<CreateBusinessFormData>({
     resolver: zodResolver(createBusinessSchema),
-    defaultValues: { slotDuration: 60 },
+    defaultValues: { defaultSlotDuration: 60 },
   })
-  const slotDuration = watch('slotDuration')
+  const defaultSlotDuration = watch('defaultSlotDuration')
 
   const createBusiness = useMutation({
     mutationFn: (data: CreateBusinessFormData) =>
       businessesApi.create({
         name: data.name,
         timezone: DEFAULT_TIMEZONE,
-        slotDuration: data.slotDuration,
+        defaultSlotDuration: data.defaultSlotDuration,
         ...(data.address ? { address: data.address } : {}),
         ...(data.phone ? { phone: data.phone } : {}),
         ...(data.email ? { email: data.email } : {}),
+        ...(data.defaultPricePerSlot ? { defaultPricePerSlot: Number(data.defaultPricePerSlot) } : {}),
       }),
   })
 
   const onSubmit = (data: CreateBusinessFormData) => {
     createBusiness.mutate(data, {
-      onSuccess: ({ data: res }) => onNext(res.business.id),
+      onSuccess: ({ data: res }) => onNext({
+        businessId: res.business.id,
+        slotDuration: data.defaultSlotDuration,
+        pricePerSlot: data.defaultPricePerSlot ?? '',
+      }),
     })
   }
 
@@ -111,16 +122,16 @@ function Step1({ onNext }: { onNext: (businessId: string) => void }) {
           </div>
         </div>
         <div>
-          <p className="text-[13px] font-semibold text-ink-700 mb-1.5">Duración predeterminada de turno</p>
+          <p className="text-[13px] font-semibold text-ink-700 mb-1.5">Duración de turno por defecto</p>
           <div className="flex gap-2">
             {DURATIONS.map((d) => (
               <button
                 key={d}
                 type="button"
-                onClick={() => setValue('slotDuration', d, { shouldValidate: true })}
+                onClick={() => setValue('defaultSlotDuration', d, { shouldValidate: true })}
                 className={cn(
                   'px-4 py-2 rounded-md border-[1.5px] text-[13px] font-semibold cursor-pointer transition-colors',
-                  slotDuration === d
+                  defaultSlotDuration === d
                     ? 'border-green-500 bg-green-50 text-green-700'
                     : 'border-ink-200 bg-white text-ink-600',
                 )}
@@ -130,6 +141,15 @@ function Step1({ onNext }: { onNext: (businessId: string) => void }) {
             ))}
           </div>
         </div>
+        <Input
+          label="Precio por turno por defecto"
+          placeholder="12000"
+          type="number"
+          {...register('defaultPricePerSlot')}
+        />
+        <p className="text-caption text-ink-400 -mt-2">
+          Son los valores que se proponen al crear una cancha. Después podés cambiarlos cancha por cancha.
+        </p>
         {createBusiness.isError && (
           <p className="text-body-sm text-red-600">{getApiErrorMessage(createBusiness.error)}</p>
         )}
@@ -151,11 +171,11 @@ function Step1({ onNext }: { onNext: (businessId: string) => void }) {
 
 // ── Step 2 ────────────────────────────────────────────────────────
 function Step2({
-  businessId,
+  defaults,
   onNext,
   onBack,
 }: {
-  businessId: string
+  defaults: CourtDefaults
   onNext: (courtId: string) => void
   onBack: () => void
 }) {
@@ -167,25 +187,34 @@ function Step2({
     formState: { errors },
   } = useForm<CreateCourtFormData>({
     resolver: zodResolver(createCourtSchema),
-    defaultValues: { sportType: 'Fútbol 5', surface: 'Césped sintético', isIndoor: false, hasLighting: true },
+    defaultValues: {
+      sportType: 'Fútbol 5',
+      surface: 'Césped sintético',
+      isIndoor: false,
+      hasLighting: true,
+      slotDuration: defaults.slotDuration,
+      pricePerSlot: defaults.pricePerSlot,
+    },
   })
   const sport = watch('sportType')
   const surface = watch('surface')
   const isIndoor = watch('isIndoor')
   const hasLighting = watch('hasLighting')
+  const slotDuration = watch('slotDuration')
 
   const createCourt = useMutation({
     mutationFn: (data: CreateCourtFormData) => {
       const capacity = data.capacity ? Number(data.capacity) : undefined
-      const pricePerHour = data.pricePerHour ? Number(data.pricePerHour) : undefined
-      return courtsApi.createCourt(businessId, {
+      const pricePerSlot = data.pricePerSlot ? Number(data.pricePerSlot) : undefined
+      return courtsApi.createCourt(defaults.businessId, {
         name: data.name,
         sportType: SPORTS_SLUGS[data.sportType] ?? data.sportType,
         surface: data.surface,
         isIndoor: data.isIndoor,
         hasLighting: data.hasLighting,
+        slotDuration: data.slotDuration,
         ...(capacity !== undefined ? { capacity } : {}),
-        ...(pricePerHour !== undefined ? { pricePerHour } : {}),
+        ...(pricePerSlot !== undefined ? { pricePerSlot } : {}),
       })
     },
   })
@@ -252,7 +281,27 @@ function Step2({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Input label="Capacidad (jugadores)" placeholder="10" type="number" {...register('capacity')} />
-            <Input label="Precio por hora" placeholder="12000" type="number" {...register('pricePerHour')} />
+            <Input label="Precio por turno" placeholder="12000" type="number" {...register('pricePerSlot')} />
+          </div>
+          <div>
+            <p className="text-[13px] font-semibold text-ink-700 mb-2">Duración del turno</p>
+            <div className="flex gap-2">
+              {DURATIONS.map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setValue('slotDuration', d, { shouldValidate: true })}
+                  className={cn(
+                    'px-4 py-2 rounded-md border-[1.5px] text-[13px] font-semibold cursor-pointer transition-colors',
+                    slotDuration === d
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-ink-200 bg-white text-ink-600',
+                  )}
+                >
+                  {d} min
+                </button>
+              ))}
+            </div>
           </div>
           <div className="flex flex-col gap-3 pt-1">
             <div className="flex items-center justify-between py-2.5 px-3.5 bg-ink-50 rounded-md border border-ink-100">
@@ -482,8 +531,9 @@ function SuccessScreen({ businessId }: { businessId: string }) {
 // ── Main page ─────────────────────────────────────────────────────
 export default function OnboardingPage() {
   const [step, setStep] = useState<1 | 2 | 3 | 'done'>(1)
-  const [businessId, setBusinessId] = useState<string | null>(null)
+  const [courtDefaults, setCourtDefaults] = useState<CourtDefaults | null>(null)
   const [courtId, setCourtId] = useState<string | null>(null)
+  const businessId = courtDefaults?.businessId ?? null
   const { token, setAuth } = useAuthStore()
 
   const handleFinish = async () => {
@@ -535,9 +585,9 @@ export default function OnboardingPage() {
         )}
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          {step === 1 && <Step1 onNext={(id) => { setBusinessId(id); setStep(2) }} />}
-          {step === 2 && businessId && (
-            <Step2 businessId={businessId} onNext={(id) => { setCourtId(id); setStep(3) }} onBack={() => setStep(1)} />
+          {step === 1 && <Step1 onNext={(d) => { setCourtDefaults(d); setStep(2) }} />}
+          {step === 2 && courtDefaults && (
+            <Step2 defaults={courtDefaults} onNext={(id) => { setCourtId(id); setStep(3) }} onBack={() => setStep(1)} />
           )}
           {step === 3 && businessId && courtId && (
             <Step3 businessId={businessId} courtId={courtId} onFinish={handleFinish} onBack={() => setStep(2)} />

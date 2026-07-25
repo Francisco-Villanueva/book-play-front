@@ -6,6 +6,7 @@ import { CourtFormPanel, type CourtFormValues } from '@/features/admin/component
 import { Button } from '@/shared/components/Button'
 import { cn } from '@/shared/utils/cn'
 import { useCourts, useCreateCourt, useUpdateCourt } from '@/features/courts/hooks/useCourts'
+import { useBusiness } from '@/features/businesses/hooks/useBusinesses'
 import { courtColor, type Court } from '@/features/admin/components/courtTypes'
 
 function Tag({ icon, label, tone }: { icon: React.ReactNode; label: string; tone: 'amber' | 'blue' }) {
@@ -17,7 +18,7 @@ function Tag({ icon, label, tone }: { icon: React.ReactNode; label: string; tone
   )
 }
 
-const COLS = '42px 1fr 100px 1fr 90px 100px 110px'
+const COLS = '42px 1fr 100px 1fr 70px 90px 100px 110px'
 
 function CourtRow({ court, onEdit, onToggle }: { court: Court; onEdit: (c: Court) => void; onToggle: (c: Court) => void }) {
   const color = courtColor(court.sportType)
@@ -42,8 +43,9 @@ function CourtRow({ court, onEdit, onToggle }: { court: Court; onEdit: (c: Court
         {court.hasLighting && <Tag icon={<Zap size={10} />} label="Ilum." tone="amber" />}
         {court.isIndoor && <Tag icon={<Home size={10} />} label="Indoor" tone="blue" />}
       </div>
+      <span className="font-mono text-[13px] text-ink-700">{court.slotDuration} min</span>
       <span className="font-mono font-bold text-[13px] text-ink-900">
-        {court.pricePerHour != null ? `$${court.pricePerHour.toLocaleString('es-AR')}/h` : '—'}
+        {court.pricePerSlot != null ? `$${court.pricePerSlot.toLocaleString('es-AR')}` : '—'}
       </span>
       <div className="flex items-center gap-1.5">
         <button
@@ -78,6 +80,7 @@ function CourtRow({ court, onEdit, onToggle }: { court: Court; onEdit: (c: Court
 export default function AdminCourtsPage() {
   const { businessId } = useParams<{ businessId: string }>()
   const { data: courts, isLoading, isError } = useCourts(businessId)
+  const { data: business } = useBusiness(businessId)
   const createCourt = useCreateCourt(businessId ?? '')
   const updateCourt = useUpdateCourt(businessId ?? '')
   const [panel, setPanel] = useState<'new' | Court | null>(null)
@@ -109,7 +112,7 @@ export default function AdminCourtsPage() {
             className="flex-none grid gap-3 px-5 py-2.5 bg-ink-50 border-b-2 border-ink-200"
             style={{ gridTemplateColumns: COLS }}
           >
-            {['', 'Cancha', 'Deporte', 'Amenidades', 'Precio', 'Estado', ''].map((c, i) => (
+            {['', 'Cancha', 'Deporte', 'Amenidades', 'Turno', 'Precio', 'Estado', ''].map((c, i) => (
               <span key={i} className="text-[11px] font-bold uppercase tracking-wide text-ink-400">{c}</span>
             ))}
           </div>
@@ -134,9 +137,11 @@ export default function AdminCourtsPage() {
           </div>
         </div>
 
-        {panel && (
+        {panel && business && (
           <CourtFormPanel
             court={panel === 'new' ? null : panel}
+            defaultSlotDuration={business.defaultSlotDuration}
+            defaultPricePerSlot={business.defaultPricePerSlot ?? null}
             onClose={() => setPanel(null)}
             onSave={handleSave}
             saving={createCourt.isPending || updateCourt.isPending}

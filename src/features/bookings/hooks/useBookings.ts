@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { bookingsApi } from '../api/bookingsApi'
+import { bookingsApi, type UpdateBookingPaymentInput } from '../api/bookingsApi'
 import { bookingsKeys } from '../api/bookingsKeys'
 
 export function useBookings(businessId: string | undefined) {
@@ -67,6 +67,15 @@ export function useCancelBooking(businessId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (bookingId: string) => bookingsApi.cancelBooking(businessId, bookingId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: bookingsKeys.all(businessId) }),
+  })
+}
+
+export function useUpdateBookingPayment(businessId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ bookingId, ...data }: UpdateBookingPaymentInput & { bookingId: string }) =>
+      bookingsApi.updatePayment(businessId, bookingId, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: bookingsKeys.all(businessId) }),
   })
 }

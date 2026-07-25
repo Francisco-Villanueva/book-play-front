@@ -22,7 +22,7 @@ export function useBusinessSearch(q: string) {
 export function useUpdateBusiness(businessId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: Partial<Pick<Business, 'name' | 'description' | 'address' | 'phone' | 'email' | 'timezone' | 'slotDuration'>>) =>
+    mutationFn: (data: Partial<Pick<Business, 'name' | 'description' | 'address' | 'phone' | 'email' | 'timezone' | 'defaultSlotDuration' | 'defaultPricePerSlot'>>) =>
       businessesApi.update(businessId, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: businessesKeys.detail(businessId) }),
   })

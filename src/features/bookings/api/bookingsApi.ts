@@ -1,5 +1,18 @@
 import { apiClient } from '@/shared/lib/apiClient'
-import type { AvailableSlots, Booking, BusinessAvailability, GuestCancellationInfo } from '@/shared/types/domain'
+import type {
+  AvailableSlots,
+  Booking,
+  BusinessAvailability,
+  GuestCancellationInfo,
+} from '@/shared/types/domain'
+
+// El backend deriva `paymentStatus` de estos dos números (BR-025).
+export interface UpdateBookingPaymentInput {
+  totalPlayers: number
+  playersPaid: number
+  amountPaid?: number
+  paymentNotes?: string
+}
 
 export const bookingsApi = {
   listByBusiness: (businessId: string) =>
@@ -40,6 +53,9 @@ export const bookingsApi = {
 
   cancelBooking: (businessId: string, bookingId: string) =>
     apiClient.patch<Booking>(`/businesses/${businessId}/bookings/${bookingId}/cancel`),
+
+  updatePayment: (businessId: string, bookingId: string, data: UpdateBookingPaymentInput) =>
+    apiClient.patch<Booking>(`/businesses/${businessId}/bookings/${bookingId}/payment`, data),
 
   getGuestCancellation: (businessId: string, bookingId: string, token: string) =>
     apiClient.get<GuestCancellationInfo>(

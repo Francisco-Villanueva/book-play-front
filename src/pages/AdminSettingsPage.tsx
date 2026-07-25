@@ -39,7 +39,7 @@ const cfgLbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var
 function GeneralTab({ businessId }: { businessId: string }) {
   const { data: business, isLoading } = useBusiness(businessId)
   const updateBusiness = useUpdateBusiness(businessId)
-  const [form, setForm] = useState({ name: '', address: '', phone: '', email: '', slotDuration: 60, timezone: TIMEZONES[0]!.value })
+  const [form, setForm] = useState({ name: '', address: '', phone: '', email: '', defaultSlotDuration: 60, defaultPricePerSlot: '', timezone: TIMEZONES[0]!.value })
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
@@ -49,7 +49,8 @@ function GeneralTab({ businessId }: { businessId: string }) {
         address: business.address ?? '',
         phone: business.phone ?? '',
         email: business.email ?? '',
-        slotDuration: business.slotDuration,
+        defaultSlotDuration: business.defaultSlotDuration,
+        defaultPricePerSlot: business.defaultPricePerSlot != null ? String(business.defaultPricePerSlot) : '',
         timezone: business.timezone,
       })
     }
@@ -58,9 +59,14 @@ function GeneralTab({ businessId }: { businessId: string }) {
   const upd = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }))
 
   const save = () => {
-    updateBusiness.mutate(form, {
-      onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2200) },
-    })
+    const { defaultPricePerSlot, ...rest } = form
+    updateBusiness.mutate(
+      {
+        ...rest,
+        ...(defaultPricePerSlot.trim() ? { defaultPricePerSlot: Number(defaultPricePerSlot) } : {}),
+      },
+      { onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2200) } },
+    )
   }
 
   if (isLoading) return <p className="text-body-sm text-ink-400">Cargando…</p>
@@ -89,21 +95,38 @@ function GeneralTab({ businessId }: { businessId: string }) {
       </div>
 
       <div style={{ marginBottom: 28 }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 14px', paddingBottom: 8, borderBottom: '1px solid var(--border-subtle)' }}>Configuración de turnos</h3>
+        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 14px', paddingBottom: 8, borderBottom: '1px solid var(--border-subtle)' }}>Valores por defecto de las canchas</h3>
+        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '-6px 0 14px' }}>
+          Se aplican a las canchas nuevas. Cada cancha puede tener su propia duración y precio.
+        </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <div>
-            <label style={cfgLbl}>Duración base del turno</label>
-            <select style={cfgFld} value={form.slotDuration} onChange={(e) => upd('slotDuration', Number(e.target.value))}>
+            <label style={cfgLbl}>Duración del turno</label>
+            <select style={cfgFld} value={form.defaultSlotDuration} onChange={(e) => upd('defaultSlotDuration', Number(e.target.value))}>
               {[30, 60, 90, 120].map((d) => <option key={d} value={d}>{d} minutos</option>)}
             </select>
-            <p style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 5 }}>Bloque mínimo de reserva.</p>
           </div>
           <div>
-            <label style={cfgLbl}>Zona horaria</label>
-            <select style={cfgFld} value={form.timezone} onChange={(e) => upd('timezone', e.target.value)}>
-              {TIMEZONES.map((z) => <option key={z.value} value={z.value}>{z.label}</option>)}
-            </select>
+            <label style={cfgLbl}>Precio por turno ($)</label>
+            <input
+              type="number"
+              min={0}
+              step={500}
+              style={cfgFld}
+              value={form.defaultPricePerSlot}
+              onChange={(e) => upd('defaultPricePerSlot', e.target.value)}
+              aria-label="Precio por turno por defecto"
+            />
           </div>
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 28 }}>
+        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 14px', paddingBottom: 8, borderBottom: '1px solid var(--border-subtle)' }}>Zona horaria</h3>
+        <div style={{ maxWidth: 283 }}>
+          <select style={cfgFld} value={form.timezone} onChange={(e) => upd('timezone', e.target.value)} aria-label="Zona horaria">
+            {TIMEZONES.map((z) => <option key={z.value} value={z.value}>{z.label}</option>)}
+          </select>
         </div>
       </div>
 

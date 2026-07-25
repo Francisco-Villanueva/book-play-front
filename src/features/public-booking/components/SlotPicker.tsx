@@ -25,7 +25,7 @@ export function SlotPicker({ businessId, court, initialDate, onBack, onPick }: S
   const subtitle = [
     humanizeSport(court.sportType),
     court.surface,
-    court.pricePerHour != null ? `${formatMoneyARS(court.pricePerHour)}/h` : null,
+    court.pricePerSlot != null ? `${formatMoneyARS(court.pricePerSlot)}/turno` : null,
   ]
     .filter(Boolean)
     .join(' · ')

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-// capacity/pricePerHour stay as raw strings here (native number inputs still emit
+// capacity/pricePerSlot stay as raw strings here (native number inputs still emit
 // strings to RHF) and are parsed to numbers where the payload is built — keeping
 // input and output types identical avoids fighting zodResolver's generics under
 // exactOptionalPropertyTypes.
@@ -11,7 +11,8 @@ export const createCourtSchema = z.object({
   capacity: z.string().optional(),
   isIndoor: z.boolean(),
   hasLighting: z.boolean(),
-  pricePerHour: z.string().optional(),
+  slotDuration: z.union([z.literal(30), z.literal(60), z.literal(90), z.literal(120)]),
+  pricePerSlot: z.string().optional(),
 })
 
 export type CreateCourtFormData = z.infer<typeof createCourtSchema>

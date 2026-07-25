@@ -15,12 +15,13 @@ interface NewBookingModalProps {
   date: string
   courts: AgendaCourt[]
   courtPrices: Record<string, number>
+  courtDurations: Record<string, number>
   prefill?: BookingPrefill
   onClose: () => void
   onSaved: () => void
 }
 
-export function NewBookingModal({ businessId, date: initialDate, courts, courtPrices, prefill, onClose, onSaved }: NewBookingModalProps) {
+export function NewBookingModal({ businessId, date: initialDate, courts, courtPrices, courtDurations, prefill, onClose, onSaved }: NewBookingModalProps) {
   const hasPrefill = prefill?.cid != null && prefill?.startH != null
 
   const [date, setDate] = useState(initialDate)
@@ -37,10 +38,12 @@ export function NewBookingModal({ businessId, date: initialDate, courts, courtPr
   const createBooking = useCreateBooking(businessId)
   const createException = useCreateExceptionRule(businessId)
   const mutation = type === 'booking' ? createBooking : createException
+  const slotHours = (cid ? courtDurations[cid] ?? 60 : 60) / 60
 
   const court = courts.find((c) => c.id === cid)
-  const dur = startH != null && endH != null && endH > startH ? endH - startH : 0
-  const rawPrice = cid && dur > 0 ? (courtPrices[cid] ?? 0) * dur : null
+  // A booking always charges the court's flat per-turno price, regardless of the
+  // end time picked here — the actual reservation always spans court.slotDuration.
+  const rawPrice = cid ? (courtPrices[cid] ?? 0) : null
   const priceStr = rawPrice ? `$${rawPrice.toLocaleString('es-AR')}` : null
 
   const step1Ok = cid != null && startH != null && endH != null && endH > startH
@@ -134,7 +137,7 @@ export function NewBookingModal({ businessId, date: initialDate, courts, courtPr
               phone={phone} setPhone={setPhone}
               note={note} setNote={setNote}
               reason={reason} setReason={setReason}
-              court={court} startH={startH} endH={endH} setEndH={setEndH} priceStr={priceStr}
+              court={court} startH={startH} endH={endH} setEndH={setEndH} priceStr={priceStr} slotHours={slotHours}
             />
           )}
           {mutation.isError && (

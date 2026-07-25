@@ -9,18 +9,17 @@ import type { Court } from './courtTypes'
 const SPORTS = ['Fútbol 5', 'Fútbol 7', 'Fútbol 11', 'Pádel', 'Tenis', 'Básquet', 'Vóley', 'Hockey', 'Otro']
 const SURFACES = ['Césped sintético', 'Césped natural', 'Cristal panorámico', 'Polvo de ladrillo', 'Cemento', 'Parquet flotante', 'Goma', 'Otro']
 
+const DURATIONS = [30, 60, 90, 120].map((d) => ({ value: String(d), label: `${d} minutos` }))
+
 export type CourtFormValues = Omit<Court, 'id' | 'businessId' | 'createdAt'>
 
 interface CourtFormPanelProps {
   court: Court | null
+  defaultSlotDuration: number
+  defaultPricePerSlot: number | null
   onClose: () => void
   onSave: (values: CourtFormValues, id?: string) => void
   saving?: boolean
-}
-
-const EMPTY_FORM: CourtFormValues = {
-  name: '', sportType: 'Fútbol 5', surface: 'Césped sintético',
-  capacity: 10, pricePerHour: 8000, isIndoor: false, hasLighting: true, isActive: true,
 }
 
 function toFormValues(court: Court): CourtFormValues {
@@ -31,15 +30,25 @@ function toFormValues(court: Court): CourtFormValues {
     capacity: court.capacity != null ? Number(court.capacity) : undefined,
     isIndoor: court.isIndoor,
     hasLighting: court.hasLighting,
-    pricePerHour: court.pricePerHour != null ? Number(court.pricePerHour) : undefined,
+    slotDuration: court.slotDuration,
+    pricePerSlot: court.pricePerSlot != null ? Number(court.pricePerSlot) : undefined,
     description: court.description,
     isActive: court.isActive,
   }
 }
 
-export function CourtFormPanel({ court, onClose, onSave, saving }: CourtFormPanelProps) {
+export function CourtFormPanel({ court, defaultSlotDuration, defaultPricePerSlot, onClose, onSave, saving }: CourtFormPanelProps) {
   const isNew = !court
-  const [form, setForm] = useState<CourtFormValues>(court ? toFormValues(court) : EMPTY_FORM)
+  const [form, setForm] = useState<CourtFormValues>(
+    court
+      ? toFormValues(court)
+      : {
+          name: '', sportType: 'Fútbol 5', surface: 'Césped sintético',
+          capacity: 10, isIndoor: false, hasLighting: true, isActive: true,
+          slotDuration: defaultSlotDuration,
+          ...(defaultPricePerSlot != null ? { pricePerSlot: defaultPricePerSlot } : {}),
+        },
+  )
   const upd = <K extends keyof CourtFormValues>(k: K, v: CourtFormValues[K]) => setForm((f) => ({ ...f, [k]: v }))
 
   return (
@@ -85,13 +94,27 @@ export function CourtFormPanel({ court, onClose, onSave, saving }: CourtFormPane
             onChange={(e) => upd('capacity', Number(e.target.value))}
           />
           <Input
-            label="Precio / hora ($)"
+            label="Precio / turno ($)"
             type="number"
             step={500}
             min={0}
-            value={form.pricePerHour ?? ''}
-            onChange={(e) => upd('pricePerHour', Number(e.target.value))}
+            value={form.pricePerSlot ?? ''}
+            onChange={(e) => upd('pricePerSlot', Number(e.target.value))}
           />
+        </div>
+        <div>
+          <Select
+            label="Duración del turno"
+            required
+            options={DURATIONS}
+            value={String(form.slotDuration)}
+            onChange={(e) => upd('slotDuration', Number(e.target.value))}
+          />
+          <p className="text-[11px] text-ink-400 mt-1">
+            {isNew
+              ? `Por defecto usa la del complejo (${defaultSlotDuration} min).`
+              : 'Solo afecta a las reservas nuevas.'}
+          </p>
         </div>
 
         <div className="border-t border-ink-100 pt-3.5 flex flex-col gap-3">

@@ -1,17 +1,20 @@
-import { X, MapPin, Calendar, Clock, Timer, Phone, Banknote, MessageCircle } from 'lucide-react'
+import { X, MapPin, Calendar, Clock, Timer, Phone, Banknote, MessageCircle, Wallet } from 'lucide-react'
 import { Button } from '@/shared/components/Button'
 import type { Reservation } from './reservationTypes'
-import { STATUS_META, hFmt, durationLabel, priceLabel, initials } from './reservationTypes'
+import { STATUS_META, PAYMENT_META, paymentDetail, hFmt, durationLabel, priceLabel, initials } from './reservationTypes'
 
 interface ReservationDetailPanelProps {
   reservation: Reservation
   courtColor: string
   onClose: () => void
   onCancel: () => void
+  onRegisterPayment: () => void
 }
 
-export function ReservationDetailPanel({ reservation, courtColor, onClose, onCancel }: ReservationDetailPanelProps) {
+export function ReservationDetailPanel({ reservation, courtColor, onClose, onCancel, onRegisterPayment }: ReservationDetailPanelProps) {
   const status = STATUS_META[reservation.status]
+  const payment = PAYMENT_META[reservation.paymentStatus]
+  const paymentText = paymentDetail(reservation)
   const rows = [
     { icon: MapPin, label: 'Cancha', value: `${reservation.court} · ${reservation.sport}` },
     { icon: Calendar, label: 'Fecha', value: `${reservation.dayOfWeek}, ${reservation.dateLabel}` },
@@ -19,6 +22,12 @@ export function ReservationDetailPanel({ reservation, courtColor, onClose, onCan
     { icon: Timer, label: 'Duración', value: durationLabel(reservation.start, reservation.end) },
     { icon: Phone, label: 'Teléfono', value: reservation.phone, mono: true },
     { icon: Banknote, label: 'Importe', value: priceLabel(reservation.price), mono: true },
+    {
+      icon: Wallet,
+      label: 'Cobro',
+      value: paymentText ? `${payment.label} · ${paymentText}` : payment.label,
+      color: payment.fg,
+    },
   ]
 
   return (
@@ -56,13 +65,16 @@ export function ReservationDetailPanel({ reservation, courtColor, onClose, onCan
             <r.icon size={14} className="text-ink-400 flex-none mt-0.5" aria-hidden />
             <div>
               <p className="text-[10px] text-ink-400 mb-0.5">{r.label}</p>
-              <p className="text-[13px] font-semibold text-ink-700" style={{ fontFamily: r.mono ? 'var(--font-mono)' : undefined }}>{r.value}</p>
+              <p className="text-[13px] font-semibold text-ink-700" style={{ fontFamily: r.mono ? 'var(--font-mono)' : undefined, color: r.color }}>{r.value}</p>
             </div>
           </div>
         ))}
       </div>
 
       <div className="flex-none px-4 py-3 border-t border-ink-100 flex flex-col gap-1.5">
+        <Button variant="soft" full onClick={onRegisterPayment} data-testid="reservation-register-payment">
+          Registrar cobro
+        </Button>
         {reservation.status !== 'cancelled' && (
           <Button variant="outline" full onClick={onCancel} data-testid="reservation-cancel">Cancelar reserva</Button>
         )}

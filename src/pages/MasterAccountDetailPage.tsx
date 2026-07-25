@@ -108,8 +108,8 @@ export default function MasterAccountDetailPage() {
                       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-strong)' }}>{c.name}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{c.sportType ?? '—'}{c.surface ? ` · ${c.surface}` : ''}</div>
                     </div>
-                    {c.pricePerHour != null && (
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--text-strong)' }}>${c.pricePerHour.toLocaleString('es-AR')}/h</span>
+                    {c.pricePerSlot != null && (
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--text-strong)' }}>${c.pricePerSlot.toLocaleString('es-AR')}</span>
                     )}
                   </div>
                 ))

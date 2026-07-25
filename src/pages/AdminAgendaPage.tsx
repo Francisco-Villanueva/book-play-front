@@ -36,7 +36,12 @@ export default function AdminAgendaPage() {
   )
   const courtPrices = useMemo(() => {
     const map: Record<string, number> = {}
-    for (const c of rawCourts ?? []) map[c.id] = c.pricePerHour ?? 0
+    for (const c of rawCourts ?? []) map[c.id] = c.pricePerSlot ?? 0
+    return map
+  }, [rawCourts])
+  const courtDurations = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const c of rawCourts ?? []) map[c.id] = c.slotDuration
     return map
   }, [rawCourts])
 
@@ -143,6 +148,7 @@ export default function AdminAgendaPage() {
           date={date}
           courts={courts}
           courtPrices={courtPrices}
+          courtDurations={courtDurations}
           prefill={modalPrefill}
           onClose={() => setModalPrefill(null)}
           onSaved={() => setModalPrefill(null)}

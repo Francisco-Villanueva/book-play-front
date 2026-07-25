@@ -1,6 +1,7 @@
 export type GlobalRole = 'MASTER' | 'PLAYER'
 export type BusinessRole = 'OWNER' | 'ADMIN' | 'STAFF'
 export type BookingStatus = 'ACTIVE' | 'CANCELLED'
+export type BookingPaymentStatus = 'UNPAID' | 'PARTIAL' | 'PAID'
 export type SubscriptionStatus = 'TRIALING' | 'ACTIVE' | 'PAST_DUE' | 'SUSPENDED' | 'CANCELLED'
 // The backend's availability endpoint only returns open windows (no per-slot
 // booked/pending/blocked breakdown) — every slot rendered from real data is
@@ -32,7 +33,9 @@ export interface Business {
   email?: string
   description?: string
   timezone: string
-  slotDuration: number
+  // Plantillas para canchas nuevas — la duración y el precio que rigen son los de cada cancha.
+  defaultSlotDuration: number
+  defaultPricePerSlot?: number | null
   createdAt: string
 }
 
@@ -69,7 +72,8 @@ export interface Court {
   capacity?: number | undefined
   isIndoor?: boolean | undefined
   hasLighting?: boolean | undefined
-  pricePerHour?: number | undefined
+  slotDuration: number
+  pricePerSlot?: number | undefined
   description?: string | undefined
   isActive: boolean
   createdAt: string
@@ -88,6 +92,11 @@ export interface Booking {
   endTime: string
   status: BookingStatus
   totalPrice?: number | null
+  paymentStatus: BookingPaymentStatus
+  amountPaid?: number | null
+  totalPlayers?: number | null
+  playersPaid?: number | null
+  paymentNotes?: string | null
   notes?: string | null
   court?: Court
   business?: Business
@@ -137,7 +146,8 @@ export interface CourtAvailabilitySummary {
   name: string
   sportType: string | null
   surface: string | null
-  pricePerHour: number | null
+  slotDuration: number
+  pricePerSlot: number | null
   availableSlots: { startTime: string; endTime: string }[]
   nextAvailable: string | null
   isFull: boolean
@@ -145,7 +155,6 @@ export interface CourtAvailabilitySummary {
 
 export interface BusinessAvailability {
   date: string
-  slotDuration: number
   courts: CourtAvailabilitySummary[]
 }
 

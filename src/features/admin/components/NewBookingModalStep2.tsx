@@ -1,7 +1,7 @@
 import { Input } from '@/shared/components/Input'
 import { PhoneInput } from '@/shared/components/PhoneInput'
 import { SegmentedControl } from '@/shared/components/SegmentedControl'
-import { HOUR_END, type AgendaCourt } from './agendaTypes'
+import { HOUR_END, hFmt, type AgendaCourt } from './agendaTypes'
 
 export type BookingModalType = 'booking' | 'block'
 
@@ -21,15 +21,19 @@ interface NewBookingModalStep2Props {
   endH: number | null
   setEndH: (h: number) => void
   priceStr: string | null
+  slotHours: number
 }
 
 export function NewBookingModalStep2({
   type, setType, name, setName, phone, setPhone, note, setNote, reason, setReason,
-  court, startH, endH, setEndH, priceStr,
+  court, startH, endH, setEndH, priceStr, slotHours,
 }: NewBookingModalStep2Props) {
   const endOptions = startH != null
     ? Array.from({ length: HOUR_END - startH }, (_, i) => startH + 1 + i)
     : []
+  // A booking always spans exactly court.slotDuration from startH — the end time
+  // picked in step 1 is only meaningful for type === 'block', never for a real booking.
+  const bookingEndH = startH != null ? startH + slotHours : null
 
   return (
     <div>
@@ -56,7 +60,7 @@ export function NewBookingModalStep2({
             </div>
           ) : (
             <span className="font-mono font-bold text-[13px] text-ink-900">
-              {startH != null ? `${String(startH).padStart(2, '0')}:00 – ${String(endH).padStart(2, '0')}:00` : ''}
+              {startH != null ? `${hFmt(startH)} – ${bookingEndH != null ? hFmt(bookingEndH) : '--:--'}` : ''}
             </span>
           )}
         </div>

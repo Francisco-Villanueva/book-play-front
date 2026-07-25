@@ -8,7 +8,8 @@ export interface CourtPayload {
   capacity?: number | undefined
   isIndoor?: boolean | undefined
   hasLighting?: boolean | undefined
-  pricePerHour?: number | undefined
+  slotDuration?: number | undefined
+  pricePerSlot?: number | undefined
   description?: string | undefined
   isActive?: boolean | undefined
 }

@@ -29,7 +29,7 @@ const TIME_OPTS: TimeOption[] = Array.from({ length: HOUR_END - HOUR_START + 1 }
 export function NewBookingModalStep1({ courts, courtPrices, date, setDate, dateLabel, minDate, cid, setCid, startH, setStartH, endH, setEndH }: NewBookingModalStep1Props) {
   const dur = startH != null && endH != null && endH > startH ? endH - startH : 0
   const court = courts.find((c) => c.id === cid)
-  const rawPrice = cid && dur > 0 ? (courtPrices[cid] ?? 0) * dur : null
+  const rawPrice = cid ? (courtPrices[cid] ?? 0) : null
   const priceStr = rawPrice ? `$${rawPrice.toLocaleString('es-AR')}` : null
 
   return (
@@ -58,7 +58,7 @@ export function NewBookingModalStep1({ courts, courtPrices, date, setDate, dateL
                 <p className="text-[11px] text-ink-500 pl-3.5">{c.sport}</p>
                 {courtPrices[c.id] != null && (
                   <p className="text-[11px] font-mono font-semibold pl-3.5 mt-0.5" style={{ color: on ? 'var(--green-700)' : 'var(--text-subtle)' }}>
-                    ${courtPrices[c.id]!.toLocaleString('es-AR')}/h
+                    ${courtPrices[c.id]!.toLocaleString('es-AR')} / turno
                   </p>
                 )}
               </button>
@@ -106,8 +106,8 @@ export function NewBookingModalStep1({ courts, courtPrices, date, setDate, dateL
         </div>
         {dur > 0 && priceStr && (
           <div className="mt-3 px-3.5 py-2.5 rounded-md flex justify-between items-center" style={{ background: 'var(--surface-brand-soft)' }}>
-            <span className="text-[13px] font-semibold text-green-700">{dur}h · {court?.name}</span>
-            <span className="font-mono font-bold text-[16px] text-green-700">{priceStr}</span>
+            <span className="text-[13px] font-semibold text-green-700">{court?.name}</span>
+            <span className="font-mono font-bold text-[16px] text-green-700">{priceStr} / turno</span>
           </div>
         )}
       </div>

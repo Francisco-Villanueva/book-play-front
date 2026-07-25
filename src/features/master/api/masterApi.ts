@@ -8,7 +8,8 @@ export interface MasterBusinessSummary {
   phone: string | null
   email: string | null
   timezone: string
-  slotDuration: number
+  defaultSlotDuration: number
+  defaultPricePerSlot: number | null
   courtsCount: number
   membersCount: number
   createdAt: string
@@ -22,7 +23,8 @@ export interface MasterBusinessDetail {
   phone: string | null
   email: string | null
   timezone: string
-  slotDuration: number
+  defaultSlotDuration: number
+  defaultPricePerSlot: number | null
   createdAt: string
   updatedAt: string
   courts: {
@@ -32,7 +34,8 @@ export interface MasterBusinessDetail {
     surface: string | null
     isIndoor: boolean
     hasLighting: boolean
-    pricePerHour: number | null
+    slotDuration: number
+    pricePerSlot: number | null
   }[]
   members: { id: string; name: string; email: string; role: BusinessRole }[]
 }

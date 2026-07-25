@@ -6,8 +6,9 @@ import { ReservationDetailPanel } from '@/features/admin/components/ReservationD
 import { cn } from '@/shared/utils/cn'
 import {
   type Reservation, type ReservationStatus,
-  STATUS_META, hFmt, durationLabel, priceLabel, initials,
+  STATUS_META, PAYMENT_META, paymentDetail, hFmt, durationLabel, priceLabel, initials,
 } from '@/features/admin/components/reservationTypes'
+import { PaymentModal } from '@/features/admin/components/PaymentModal'
 import { useBookings, useCancelBooking } from '@/features/bookings/hooks/useBookings'
 import { courtColor } from '@/features/admin/components/courtTypes'
 import { relativeDayLabel, timeToHours } from '@/shared/utils/date'
@@ -29,6 +30,11 @@ function toReservation(b: Booking): Reservation {
     end: timeToHours(b.endTime),
     status: b.status === 'CANCELLED' ? 'cancelled' : 'booked',
     price: b.totalPrice ?? 0,
+    paymentStatus: b.paymentStatus ?? 'UNPAID',
+    amountPaid: b.amountPaid ?? null,
+    totalPlayers: b.totalPlayers ?? null,
+    playersPaid: b.playersPaid ?? null,
+    paymentNotes: b.paymentNotes ?? null,
   }
 }
 
@@ -39,7 +45,7 @@ const STATUS_OPTS: { key: ReservationStatus | 'all'; label: string }[] = [
   { key: 'cancelled', label: 'Canceladas' },
 ]
 
-const COLS = '2fr 1.2fr 100px 90px 80px 80px 100px'
+const COLS = '1.7fr 1fr 85px 75px 70px 80px 100px 125px'
 
 export default function AdminReservationsPage() {
   const { businessId } = useParams<{ businessId: string }>()
@@ -48,7 +54,9 @@ export default function AdminReservationsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | 'all'>('all')
   const [dateFilter, setDateFilter] = useState<(typeof DATE_OPTS)[number]>('all')
+  const [onlyUnpaid, setOnlyUnpaid] = useState(false)
   const [selected, setSelected] = useState<string | null>(null)
+  const [paying, setPaying] = useState<string | null>(null)
 
   const data = useMemo(() => (bookings ?? []).map(toReservation), [bookings])
 
@@ -57,7 +65,8 @@ export default function AdminReservationsPage() {
     const matchQ = !q || r.playerName.toLowerCase().includes(q) || r.court.toLowerCase().includes(q) || r.phone.includes(q)
     const matchStatus = statusFilter === 'all' || r.status === statusFilter
     const matchDate = dateFilter === 'all' || r.dateGroup === dateFilter
-    return matchQ && matchStatus && matchDate
+    const matchPayment = !onlyUnpaid || r.paymentStatus !== 'PAID'
+    return matchQ && matchStatus && matchDate && matchPayment
   })
 
   const counts = {
@@ -68,7 +77,12 @@ export default function AdminReservationsPage() {
   const todayCount = data.filter((r) => r.dateGroup === 'Hoy' && r.status !== 'cancelled').length
   const todayRevenue = data.filter((r) => r.dateGroup === 'Hoy' && r.status === 'booked').reduce((acc, r) => acc + r.price, 0)
 
+  // Sólo reservas no canceladas: lo cancelado no es plata que el complejo espera cobrar.
+  const pending = data.filter((r) => r.status === 'booked' && r.paymentStatus !== 'PAID')
+  const pendingAmount = pending.reduce((acc, r) => acc + (r.price - (r.amountPaid ?? 0)), 0)
+
   const selectedReservation = selected !== null ? data.find((r) => r.id === selected) : undefined
+  const payingReservation = paying !== null ? data.find((r) => r.id === paying) : undefined
 
   const handleCancel = () => {
     if (!selected) return
@@ -88,6 +102,7 @@ export default function AdminReservationsPage() {
               { label: 'Hoy', value: String(todayCount), unit: 'reservas', color: 'var(--text-strong)' },
               { label: 'Canceladas', value: String(counts.cancelled), unit: 'total', color: '#B91C1C' },
               { label: 'Ingresos hoy', value: priceLabel(todayRevenue), unit: 'confirmados', color: 'var(--green-700)', mono: true },
+              { label: 'Sin cobrar', value: priceLabel(pendingAmount), unit: `${pending.length} reservas`, color: 'var(--red-700)', mono: true },
             ].map((k, i) => (
               <div key={k.label} className="flex-1 px-5 py-3" style={{ borderLeft: i ? '1px solid var(--border-subtle)' : 'none' }}>
                 <p className="text-[11px] font-semibold text-ink-500 mb-0.5">{k.label}</p>
@@ -139,6 +154,20 @@ export default function AdminReservationsPage() {
               ))}
             </div>
 
+            <button
+              type="button"
+              onClick={() => setOnlyUnpaid((v) => !v)}
+              aria-pressed={onlyUnpaid}
+              className="px-2.5 py-1 rounded-full text-[12px] font-semibold cursor-pointer flex-none"
+              style={{
+                border: `1.5px solid ${onlyUnpaid ? 'var(--red-500)' : 'var(--border-default)'}`,
+                background: onlyUnpaid ? 'var(--red-50)' : 'transparent',
+                color: onlyUnpaid ? 'var(--red-700)' : 'var(--text-muted)',
+              }}
+            >
+              Sin cobrar
+            </button>
+
             <div className="w-px h-6 bg-ink-100 flex-none" />
 
             <div className="flex bg-ink-50 border border-ink-200 rounded-md overflow-hidden">
@@ -160,7 +189,7 @@ export default function AdminReservationsPage() {
 
           {/* Table header */}
           <div className="flex-none grid gap-3 px-5 py-2 bg-ink-50 border-b-2 border-ink-200" style={{ gridTemplateColumns: COLS }}>
-            {['Jugador', 'Cancha', 'Fecha', 'Horario', 'Duración', 'Precio', 'Estado'].map((h) => (
+            {['Jugador', 'Cancha', 'Fecha', 'Horario', 'Duración', 'Precio', 'Estado', 'Cobro'].map((h) => (
               <span key={h} className="text-[11px] font-bold uppercase tracking-wide text-ink-400">{h}</span>
             ))}
           </div>
@@ -181,6 +210,8 @@ export default function AdminReservationsPage() {
                 const on = selected === r.id
                 const color = courtColor(r.sport)
                 const status = STATUS_META[r.status]
+                const payment = PAYMENT_META[r.paymentStatus]
+                const detail = paymentDetail(r)
                 return (
                   <div
                     key={r.id}
@@ -216,6 +247,17 @@ export default function AdminReservationsPage() {
                       <span className="w-1.5 h-1.5 rounded-full flex-none" style={{ background: status.fg }} />
                       {status.label}
                     </span>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setPaying(r.id) }}
+                      aria-label={`Registrar cobro de ${r.playerName}`}
+                      data-testid={`reservation-payment-${r.id}`}
+                      className="text-left px-2 py-1 rounded-md border cursor-pointer w-full"
+                      style={{ background: payment.bg, borderColor: payment.bd, color: payment.fg }}
+                    >
+                      <span className="block text-[11px] font-bold leading-tight">{payment.short}</span>
+                      {detail && <span className="block text-[10px] font-medium opacity-80 leading-tight">{detail}</span>}
+                    </button>
                   </div>
                 )
               })
@@ -229,6 +271,15 @@ export default function AdminReservationsPage() {
             courtColor={courtColor(selectedReservation.sport)}
             onClose={() => setSelected(null)}
             onCancel={handleCancel}
+            onRegisterPayment={() => setPaying(selectedReservation.id)}
+          />
+        )}
+
+        {payingReservation && businessId && (
+          <PaymentModal
+            businessId={businessId}
+            reservation={payingReservation}
+            onClose={() => setPaying(null)}
           />
         )}
       </div>
