@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { Search, X, Phone, Mail, CalendarCheck, Clock, ChevronDown, ChevronUp } from 'lucide-react'
 import { AdminShell } from '@/features/admin/components/AdminShell'
 import { useBookings } from '@/features/bookings/hooks/useBookings'
-import { formatMoneyARS, relativeDayLabel, todayISO } from '@/shared/utils/date'
+import { addDaysISO, formatMoneyARS, relativeDayLabel, todayISO } from '@/shared/utils/date'
 import type { Booking } from '@/shared/types/domain'
 
 interface Client {
@@ -157,9 +157,15 @@ function DetailPanel({ client, onClose }: { client: Client; onClose: () => void 
 
 type SortKey = 'name' | 'total' | 'cancelled' | 'totalSpent'
 
+// Ventana de historial del listado de jugadores. Sin dateTo: las reservas
+// futuras hacen falta para la columna "próxima".
+const CLIENT_HISTORY_DAYS = 180
+
 export default function AdminClientsPage() {
   const { businessId } = useParams<{ businessId: string }>()
-  const { data: bookings, isLoading, isError } = useBookings(businessId)
+  const { data: bookings, isLoading, isError } = useBookings(businessId, {
+    dateFrom: addDaysISO(todayISO(), -CLIENT_HISTORY_DAYS),
+  })
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('total')
   const [sortDesc, setSortDesc] = useState(true)

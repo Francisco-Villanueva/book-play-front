@@ -13,13 +13,6 @@ export const authApi = {
   register: (name: string, userName: string, email: string, password: string) =>
     apiClient.post<AuthResponse>('/auth/register', { name, userName, email, password }),
 
-  // /users/me (not /auth/me) is the endpoint that also resolves the user's business
-  // memberships — required to know whether a PLAYER also administers a business.
-  me: () =>
-    apiClient
-      .get<{ user: User }>('/users/me')
-      .then((response) => ({ ...response, data: response.data.user })),
-
   // Always resolves 200 with a generic message, exista o no la cuenta.
   forgotPassword: (email: string) =>
     apiClient.post<{ message: string }>('/auth/forgot-password', { email }),

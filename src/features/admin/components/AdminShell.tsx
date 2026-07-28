@@ -9,21 +9,21 @@ import {
   Users,
   Settings,
   LogOut,
-  ChevronsUpDown,
   Bell,
   Plus,
   Search,
   Trophy,
 } from "lucide-react";
+import { BusinessPicker } from "./BusinessPicker";
 import { cn } from "@/shared/utils/cn";
 import { Avatar } from "@/shared/components/Avatar";
 import { Button } from "@/shared/components/Button";
 import { IconButton } from "@/shared/components/IconButton";
-import { TrialBanner } from "@/shared/components/TrialBanner";
+import { SubscriptionBanner } from "@/shared/components/SubscriptionBanner";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useAdminStore } from "../store/adminStore";
 import { useCourts } from "@/features/courts/hooks/useCourts";
-import { useSubscription } from "@/features/billing/hooks/useBilling";
+import { useSubscriptionAccess } from "@/features/billing/hooks/useBilling";
 import { courtColor } from "./courtTypes";
 import { NewBookingModal } from "./NewBookingModal";
 import { todayISO } from "@/shared/utils/date";
@@ -62,26 +62,16 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
   const { pathname } = useLocation();
   const { user, logout } = useAuthStore();
   const { sidebarOpen } = useAdminStore();
-  const [trialBannerDismissed, setTrialBannerDismissed] = useState(false);
+  const [expiryBannerDismissed, setExpiryBannerDismissed] = useState(false);
   const [newBookingOpen, setNewBookingOpen] = useState(false);
 
-  const { data: subscription } = useSubscription(businessId);
-  const isTrial = subscription?.status === "TRIALING";
-  const trialDaysLeft = subscription
-    ? Math.max(
-        0,
-        Math.ceil(
-          (new Date(subscription.trialEndsAt).getTime() - Date.now()) /
-            86_400_000,
-        ),
-      )
-    : 0;
-  const showTrialBanner = isTrial && !trialBannerDismissed;
+  // El aviso lo ven los tres roles; sólo el OWNER puede pagar.
+  const { data: access } = useSubscriptionAccess(businessId);
+  const readOnly = access?.accessLevel === "READ_ONLY";
+  const isOwner =
+    user?.businesses?.find((b) => b.id === businessId)?.role === "OWNER";
 
   const base = `/admin/${businessId}`;
-  const activeBusiness = user?.businesses?.find((b) => b.id === businessId);
-  const businessLabel =
-    activeBusiness?.role === "STAFF" ? "Personal" : "Complejo deportivo";
 
   const { data: rawCourts } = useCourts(businessId);
   const courts = useMemo(
@@ -124,23 +114,10 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
             <img src="/logo-wordmark.svg" height="32" alt="Book & Play" />
           </div>
 
-          <button
-            type="button"
-            className="flex items-center gap-2.5 mx-3.5 mb-3.5 px-3 py-2.5 bg-ink-50 border border-ink-100 rounded-md cursor-pointer text-left"
-          >
-            <Avatar name={activeBusiness?.name ?? "Complejo"} size="sm" />
-            <div className="flex-1 min-w-0">
-              <p className="text-caption font-bold text-ink-900 font-body truncate">
-                {activeBusiness?.name ?? "Complejo"}
-              </p>
-              <p className="text-[11px] text-ink-500">{businessLabel}</p>
-            </div>
-            <ChevronsUpDown
-              size={15}
-              className="text-ink-400 flex-none"
-              aria-hidden
-            />
-          </button>
+          <BusinessPicker
+            businessId={businessId ?? ""}
+            businesses={user?.businesses ?? []}
+          />
 
           <nav className="flex-1 px-3.5 flex flex-col gap-0.5">
             {NAV.map(({ key, icon: Icon, label, path, badge }) => {
@@ -217,17 +194,29 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
             <IconButton variant="outline" aria-label="Notificaciones">
               <Bell size={18} />
             </IconButton>
-            <Button leftIcon={<Plus size={18} aria-hidden />} onClick={() => setNewBookingOpen(true)} data-testid="shell-new-booking">
+            <Button
+              leftIcon={<Plus size={18} aria-hidden />}
+              onClick={() => setNewBookingOpen(true)}
+              disabled={readOnly}
+              title={
+                readOnly
+                  ? "Reactivá tu plan para volver a cargar reservas"
+                  : undefined
+              }
+              data-testid="shell-new-booking"
+            >
               Nueva reserva
             </Button>
           </div>
         </header>
 
-        {showTrialBanner && (
-          <TrialBanner
-            daysLeft={trialDaysLeft}
+        {!expiryBannerDismissed && (
+          <SubscriptionBanner
+            daysLeft={access?.daysUntilExpiry ?? null}
+            readOnly={readOnly}
+            canPay={!!isOwner}
             onUpgrade={() => navigate(`/admin/${businessId}/upgrade`)}
-            onDismiss={() => setTrialBannerDismissed(true)}
+            onDismiss={() => setExpiryBannerDismissed(true)}
           />
         )}
 

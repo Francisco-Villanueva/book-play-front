@@ -63,6 +63,23 @@ export interface BusinessUser {
   user?: User
 }
 
+export interface BusinessMember {
+  id: string
+  businessId: string
+  userId: string
+  role: BusinessRole
+  // El backend sólo incluye estos campos del usuario en el listado de miembros.
+  user?: { id: string; name: string; email: string; userName?: string }
+  createdAt?: string
+}
+
+export interface InvitationPreview {
+  email: string
+  role: BusinessRole
+  businessName: string | null
+  status: 'PENDING' | 'ACCEPTED' | 'EXPIRED'
+}
+
 export interface Court {
   id: string
   businessId: string
@@ -138,6 +155,12 @@ export interface AvailableSlots {
   date: string
   courtId: string
   slotDuration: number
+  /**
+   * `false` cuando la suscripción del complejo venció. Los slots se devuelven
+   * igual — el panel del complejo los necesita para leer su agenda — así que es
+   * la pantalla pública la que debe mostrarlos como no disponibles.
+   */
+  acceptsBookings: boolean
   availableSlots: { startTime: string; endTime: string }[]
 }
 
@@ -155,7 +178,20 @@ export interface CourtAvailabilitySummary {
 
 export interface BusinessAvailability {
   date: string
+  acceptsBookings: boolean
   courts: CourtAvailabilitySummary[]
+}
+
+export interface PageMeta {
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+export interface Paginated<T> {
+  data: T[]
+  meta: PageMeta
 }
 
 export interface Plan {

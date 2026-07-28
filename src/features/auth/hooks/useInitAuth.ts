@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { authApi } from '../api/authApi'
+import { usersApi } from '@/features/users/api/usersApi'
 import { useAuthStore } from '../store/authStore'
 
 export function useInitAuth() {
@@ -17,7 +17,7 @@ export function useInitAuth() {
       return
     }
 
-    authApi
+    usersApi
       .me()
       .then(({ data }) => setAuth(data, token))
       .catch(() => logout())

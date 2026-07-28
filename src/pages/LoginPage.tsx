@@ -1,8 +1,10 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { LoginScreen } from '@/features/auth/components/LoginScreen'
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  // Conserva el ?next= al saltar a registro, para no perder el destino de una invitación.
+  const { search } = useLocation()
   return (
     <div className="min-h-screen bg-ink-25 flex items-center justify-center p-4">
       <div
@@ -10,7 +12,7 @@ export default function LoginPage() {
         style={{ maxHeight: '90vh' }}
       >
         <LoginScreen
-          onRegister={() => navigate('/register')}
+          onRegister={() => navigate(`/register${search}`)}
           onForgotPassword={() => navigate('/forgot-password')}
         />
       </div>

@@ -16,7 +16,7 @@ import { courtsApi } from '@/features/courts/api/courtsApi'
 import { createCourtSchema, type CreateCourtFormData } from '@/features/courts/schemas/createCourtSchema'
 import { availabilityRulesApi } from '@/features/availability-rules/api/availabilityRulesApi'
 import { availabilityWizardSchema, type AvailabilityWizardFormData } from '@/features/availability-rules/schemas/availabilityWizardSchema'
-import { authApi } from '@/features/auth/api/authApi'
+import { usersApi } from '@/features/users/api/usersApi'
 import { useAuthStore } from '@/features/auth/store/authStore'
 
 const DEFAULT_TIMEZONE = 'America/Argentina/Buenos_Aires'
@@ -541,7 +541,7 @@ export default function OnboardingPage() {
     // future logins (and the current session) route straight to this business's admin panel.
     if (token) {
       try {
-        const { data } = await authApi.me()
+        const { data } = await usersApi.me()
         setAuth(data, token)
       } catch {
         // Non-fatal — the business was created either way; it'll sync on next session restore.

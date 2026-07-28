@@ -37,15 +37,19 @@ export function useCourtsAvailability(
     staleTime: 0,
   })
 
+  // Un complejo con la suscripción vencida se ve simplemente sin disponibilidad:
+  // al jugador no se le expone la situación comercial del complejo.
+  const locked = data?.acceptsBookings === false
+
   const byId = new Map((data?.courts ?? []).map((c) => [c.courtId, c]))
   const map: Record<string, CourtAvailability> = {}
   courts.forEach((court) => {
     const summary = byId.get(court.id)
     map[court.id] = {
       isLoading,
-      slots: summary?.availableSlots.map((s) => s.startTime) ?? [],
-      nextFree: summary?.nextAvailable ?? null,
-      isFull: !isLoading && (summary?.isFull ?? true),
+      slots: locked ? [] : (summary?.availableSlots.map((s) => s.startTime) ?? []),
+      nextFree: locked ? null : (summary?.nextAvailable ?? null),
+      isFull: !isLoading && (locked || (summary?.isFull ?? true)),
     }
   })
   return map

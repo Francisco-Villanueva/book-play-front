@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Clock, Trash2, Plus, CheckCircle, Building2, CalendarOff, CreditCard } from 'lucide-react'
+import { Clock, Trash2, Plus, CheckCircle, Building2, CalendarOff, CreditCard, Users } from 'lucide-react'
 import { AdminShell } from '@/features/admin/components/AdminShell'
 import { Button } from '@/shared/components/Button'
 import { PhoneInput } from '@/shared/components/PhoneInput'
 import { cn } from '@/shared/utils/cn'
 import { BillingSettingsPanel } from '@/features/billing/components/BillingSettingsPanel'
+import { TeamPanel } from '@/features/members/components/TeamPanel'
 import { useBusiness, useUpdateBusiness } from '@/features/businesses/hooks/useBusinesses'
 import { useCourts } from '@/features/courts/hooks/useCourts'
 import {
@@ -556,6 +557,7 @@ const TABS = [
   { key: 'general',     label: 'Datos generales', Icon: Building2   },
   { key: 'horarios',    label: 'Horarios',         Icon: Clock       },
   { key: 'excepciones', label: 'Excepciones',      Icon: CalendarOff },
+  { key: 'equipo',      label: 'Equipo',           Icon: Users       },
   { key: 'facturacion', label: 'Facturación',      Icon: CreditCard  },
 ] as const
 
@@ -591,6 +593,7 @@ export default function AdminSettingsPage() {
           {activeTab === 'general'     && <GeneralTab businessId={businessId} />}
           {activeTab === 'horarios'    && <ScheduleTab businessId={businessId} />}
           {activeTab === 'excepciones' && <ExceptionsTab businessId={businessId} />}
+          {activeTab === 'equipo'      && <TeamPanel businessId={businessId} />}
           {activeTab === 'facturacion' && <BillingTab businessId={businessId} />}
         </div>
       </div>

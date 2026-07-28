@@ -3,6 +3,7 @@ import { billingApi, type CreateCheckoutSessionPayload } from '../api/billingApi
 
 const billingKeys = {
   subscription: (businessId: string) => ['billing', businessId, 'subscription'] as const,
+  access: (businessId: string) => ['billing', businessId, 'access'] as const,
   payments: (businessId: string) => ['billing', businessId, 'payments'] as const,
 }
 
@@ -20,6 +21,25 @@ export function useSubscription(businessId: string | undefined, options?: UseSub
     ...(options?.refetchInterval !== undefined ? { refetchInterval: options.refetchInterval } : {}),
     ...(options?.refetchOnMount !== undefined ? { refetchOnMount: options.refetchOnMount } : {}),
   })
+}
+
+export function useSubscriptionAccess(businessId: string | undefined) {
+  return useQuery({
+    queryKey: billingKeys.access(businessId ?? ''),
+    queryFn: () => billingApi.getAccess(businessId!).then((res) => res.data),
+    enabled: !!businessId,
+    retry: false,
+  })
+}
+
+/**
+ * Modo solo lectura del complejo. Ante la duda (todavía cargando, o el endpoint
+ * falló) devuelve `false`: bloquear la UI de un complejo que sí puede operar es
+ * peor que dejar que el guard del backend rechace la acción.
+ */
+export function useReadOnly(businessId: string | undefined): boolean {
+  const { data } = useSubscriptionAccess(businessId)
+  return data?.accessLevel === 'READ_ONLY'
 }
 
 export function usePayments(businessId: string | undefined, enabled = true) {

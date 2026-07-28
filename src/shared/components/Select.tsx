@@ -5,8 +5,8 @@ import { ChevronDown } from 'lucide-react'
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string
   options: string[] | { value: string; label: string }[]
-  error?: string
-  helperText?: string
+  error?: string | undefined
+  helperText?: string | undefined
 }
 
 export function Select({ label, options, error, helperText, className, id: propId, ...rest }: SelectProps) {

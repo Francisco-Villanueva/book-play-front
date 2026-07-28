@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Zap } from 'lucide-react'
 import { Button } from '@/shared/components/Button'
-import { TrialBanner } from '@/shared/components/TrialBanner'
+import { SubscriptionBanner } from '@/shared/components/SubscriptionBanner'
 import { InvoiceHistoryTable } from './InvoiceHistoryTable'
 import { useCancelSubscription, usePayments, useReactivateSubscription, useSubscription } from '../hooks/useBilling'
 import { getApiErrorMessage } from '@/shared/utils/apiError'
@@ -51,7 +51,6 @@ export function BillingSettingsPanel({ businessId, onUpgrade }: BillingSettingsP
     )
   }
 
-  const daysLeft = Math.max(0, Math.ceil((new Date(subscription.trialEndsAt).getTime() - Date.now()) / 86_400_000))
   const nextBillingDate = subscription.currentPeriodEnd
     ? new Date(subscription.currentPeriodEnd).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })
     : null
@@ -60,11 +59,14 @@ export function BillingSettingsPanel({ businessId, onUpgrade }: BillingSettingsP
 
   return (
     <div className="max-w-[680px]">
-      {isTrial && (
-        <div className="mb-5 rounded-md overflow-hidden">
-          <TrialBanner daysLeft={daysLeft} onUpgrade={onUpgrade} />
-        </div>
-      )}
+      <div className="mb-5 rounded-md overflow-hidden empty:mb-0">
+        <SubscriptionBanner
+          daysLeft={subscription.daysUntilExpiry}
+          readOnly={subscription.accessLevel === 'READ_ONLY'}
+          canPay
+          onUpgrade={onUpgrade}
+        />
+      </div>
 
       {/* Current plan card */}
       <div className="bg-white rounded-xl border border-ink-100 px-[22px] py-5 mb-5 shadow-sm">
@@ -74,7 +76,9 @@ export function BillingSettingsPanel({ businessId, onUpgrade }: BillingSettingsP
             <div className="flex items-center gap-2.5">
               <span className="font-display text-h3 font-extrabold text-ink-900">{planName}</span>
               <span className={`text-[12px] font-bold px-2.5 py-0.5 rounded-full border ${STATUS_BADGE_CLASS[subscription.status]}`}>
-                {isTrial ? `${daysLeft} días restantes` : STATUS_LABEL[subscription.status]}
+                {isTrial && subscription.daysUntilExpiry !== null
+                  ? `${Math.max(0, subscription.daysUntilExpiry)} días restantes`
+                  : STATUS_LABEL[subscription.status]}
               </span>
             </div>
           </div>

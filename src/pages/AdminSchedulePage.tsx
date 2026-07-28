@@ -64,11 +64,16 @@ export default function AdminSchedulePage() {
   const [weekOffset, setWeekOffset] = useState(0)
 
   const { data: rawCourts, isLoading: courtsLoading } = useCourts(businessId)
-  const { data: rawBookings, isLoading: bookingsLoading } = useBookings(businessId)
 
   const weekStart = useMemo(() => addDaysISO(mondayOf(todayISO()), weekOffset * 7), [weekOffset])
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDaysISO(weekStart, i)), [weekStart])
   const today = todayISO()
+
+  const { data: rawBookings, isLoading: bookingsLoading } = useBookings(businessId, {
+    dateFrom: weekStart,
+    dateTo: weekDays[6]!,
+    status: 'ACTIVE',
+  })
 
   const courts = (rawCourts ?? []).filter((c) => c.isActive)
   const sports = ['Todas', ...new Set(courts.map((c) => c.sportType ?? '—'))]

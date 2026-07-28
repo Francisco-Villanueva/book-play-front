@@ -1,7 +1,20 @@
 import { apiClient } from '@/shared/lib/apiClient'
 import type { Plan, SubscriptionStatus } from '@/shared/types/domain'
 
-export interface Subscription {
+export type AccessLevel = 'FULL' | 'READ_ONLY'
+
+/**
+ * El motivo del bloqueo (trial vencido, falta de pago, baja voluntaria) no le
+ * importa a la UI: sólo el nivel de acceso y cuánto falta para el vencimiento.
+ * El backend los deriva para que el cliente no reinterprete el enum de estado.
+ */
+export interface SubscriptionAccess {
+  accessLevel: AccessLevel
+  expiresAt: string | null
+  daysUntilExpiry: number | null
+}
+
+export interface Subscription extends SubscriptionAccess {
   businessId: string
   planId: string | null
   plan: Plan | null
@@ -40,6 +53,11 @@ export interface CreateCheckoutSessionResponse {
 export const billingApi = {
   getSubscription: (businessId: string) =>
     apiClient.get<Subscription>(`/businesses/${businessId}/subscription`),
+
+  // Disponible para OWNER, ADMIN y STAFF — el detalle de facturación sigue
+  // siendo sólo del OWNER, pero el aviso de vencimiento lo necesitan todos.
+  getAccess: (businessId: string) =>
+    apiClient.get<SubscriptionAccess>(`/businesses/${businessId}/subscription/access`),
 
   listPayments: (businessId: string) =>
     apiClient.get<Payment[]>(`/businesses/${businessId}/subscription/payments`),

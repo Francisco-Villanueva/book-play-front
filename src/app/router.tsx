@@ -8,9 +8,6 @@ import RegisterPage from '@/pages/RegisterPage'
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
 import ResetPasswordPage from '@/pages/ResetPasswordPage'
 import DashboardPage from '@/pages/DashboardPage'
-import BookCourtPage from '@/pages/BookCourtPage'
-import ConfirmBookingPage from '@/pages/ConfirmBookingPage'
-import BookingSuccessPage from '@/pages/BookingSuccessPage'
 import MyBookingsPage from '@/pages/MyBookingsPage'
 import BookingDetailPage from '@/pages/BookingDetailPage'
 import ProfilePage from '@/pages/ProfilePage'
@@ -22,6 +19,7 @@ import AdminReservationsPage from '@/pages/AdminReservationsPage'
 import AdminClientsPage from '@/pages/AdminClientsPage'
 import AdminSettingsPage from '@/pages/AdminSettingsPage'
 import PublicBookingPage from '@/pages/PublicBookingPage'
+import AcceptInvitationPage from '@/pages/AcceptInvitationPage'
 import GuestBookingCancelPage from '@/pages/GuestBookingCancelPage'
 import OnboardingPage from '@/pages/OnboardingPage'
 import NotFoundPage from '@/pages/NotFoundPage'
@@ -63,6 +61,8 @@ export const router = createBrowserRouter([
       { path: '/reset-password',                element: <ResetPasswordPage /> },
       { path: '/businesses/:businessId/book',   element: <PublicBookingPage /> },
       { path: '/businesses/:businessId/bookings/:bookingId/cancel', element: <GuestBookingCancelPage /> },
+      // Destino del mail de invitación al equipo; el token viaja por query string.
+      { path: '/invitations/accept',            element: <AcceptInvitationPage /> },
       { path: '/unauthorized',                  element: <UnauthorizedPage /> },
 
       // Requires authentication — any logged-in user
@@ -73,9 +73,6 @@ export const router = createBrowserRouter([
 
           /* Player app */
           { path: '/dashboard',                            element: <DashboardPage /> },
-          { path: '/book/:courtId',                        element: <BookCourtPage /> },
-          { path: '/book/:courtId/confirm',                element: <ConfirmBookingPage /> },
-          { path: '/book/:courtId/success',                element: <BookingSuccessPage /> },
           { path: '/my-bookings',                          element: <MyBookingsPage /> },
           { path: '/my-bookings/:bookingId',               element: <BookingDetailPage /> },
           { path: '/profile',                              element: <ProfilePage /> },

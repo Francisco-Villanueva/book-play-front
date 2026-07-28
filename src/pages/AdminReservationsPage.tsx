@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Search, X, SearchX } from 'lucide-react'
+import { Search, X, SearchX, ChevronLeft, ChevronRight } from 'lucide-react'
 import { AdminShell } from '@/features/admin/components/AdminShell'
 import { ReservationDetailPanel } from '@/features/admin/components/ReservationDetailPanel'
 import { cn } from '@/shared/utils/cn'
@@ -9,10 +9,10 @@ import {
   STATUS_META, PAYMENT_META, paymentDetail, hFmt, durationLabel, priceLabel, initials,
 } from '@/features/admin/components/reservationTypes'
 import { PaymentModal } from '@/features/admin/components/PaymentModal'
-import { useBookings, useCancelBooking } from '@/features/bookings/hooks/useBookings'
+import { useBookings, useBookingsPage, useCancelBooking } from '@/features/bookings/hooks/useBookings'
 import { courtColor } from '@/features/admin/components/courtTypes'
-import { relativeDayLabel, timeToHours } from '@/shared/utils/date'
-import type { Booking } from '@/shared/types/domain'
+import { addDaysISO, relativeDayLabel, timeToHours, todayISO } from '@/shared/utils/date'
+import type { Booking, BookingPaymentStatus, BookingStatus } from '@/shared/types/domain'
 
 function toReservation(b: Booking): Reservation {
   const d = new Date(b.date + 'T12:00:00')
@@ -47,42 +47,88 @@ const STATUS_OPTS: { key: ReservationStatus | 'all'; label: string }[] = [
 
 const COLS = '1.7fr 1fr 85px 75px 70px 80px 100px 125px'
 
+const PAGE_SIZE = 50
+
+// Ventana de los KPIs y de los contadores por estado. La tabla pagina contra
+// todo el historial; estos agregados se calculan en el cliente, así que se
+// acotan a un rango fijo y la UI aclara cuál es.
+const SUMMARY_DAYS = 30
+
+const STATUS_PARAM: Record<ReservationStatus, BookingStatus> = {
+  booked: 'ACTIVE',
+  cancelled: 'CANCELLED',
+}
+
+function dateParam(filter: (typeof DATE_OPTS)[number]): string | undefined {
+  const today = todayISO()
+  if (filter === 'Hoy') return today
+  if (filter === 'Mañana') return addDaysISO(today, 1)
+  if (filter === 'Ayer') return addDaysISO(today, -1)
+  return undefined
+}
+
 export default function AdminReservationsPage() {
   const { businessId } = useParams<{ businessId: string }>()
-  const { data: bookings, isLoading, isError } = useBookings(businessId)
   const cancelBooking = useCancelBooking(businessId ?? '')
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | 'all'>('all')
   const [dateFilter, setDateFilter] = useState<(typeof DATE_OPTS)[number]>('all')
   const [onlyUnpaid, setOnlyUnpaid] = useState(false)
+  const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<string | null>(null)
   const [paying, setPaying] = useState<string | null>(null)
 
-  const data = useMemo(() => (bookings ?? []).map(toReservation), [bookings])
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 300)
+    return () => clearTimeout(t)
+  }, [search])
 
-  const filtered = data.filter((r) => {
-    const q = search.toLowerCase()
-    const matchQ = !q || r.playerName.toLowerCase().includes(q) || r.court.toLowerCase().includes(q) || r.phone.includes(q)
-    const matchStatus = statusFilter === 'all' || r.status === statusFilter
-    const matchDate = dateFilter === 'all' || r.dateGroup === dateFilter
-    const matchPayment = !onlyUnpaid || r.paymentStatus !== 'PAID'
-    return matchQ && matchStatus && matchDate && matchPayment
+  // Cambiar un filtro con la página 5 abierta dejaría la tabla vacía.
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch, statusFilter, dateFilter, onlyUnpaid])
+
+  const { data: pageResult, isLoading, isError } = useBookingsPage(businessId, {
+    page,
+    limit: PAGE_SIZE,
+    sort: 'desc',
+    ...(debouncedSearch ? { q: debouncedSearch } : {}),
+    ...(statusFilter !== 'all' ? { status: STATUS_PARAM[statusFilter] } : {}),
+    ...(dateParam(dateFilter) ? { date: dateParam(dateFilter)! } : {}),
+    ...(onlyUnpaid ? { paymentStatus: ['UNPAID', 'PARTIAL'] as BookingPaymentStatus[] } : {}),
   })
 
+  const { data: summaryBookings } = useBookings(businessId, {
+    dateFrom: addDaysISO(todayISO(), -SUMMARY_DAYS),
+  })
+
+  const rows = useMemo(
+    () => (pageResult?.data ?? []).map(toReservation),
+    [pageResult],
+  )
+  const summary = useMemo(
+    () => (summaryBookings ?? []).map(toReservation),
+    [summaryBookings],
+  )
+
+  const total = pageResult?.meta.total ?? 0
+  const totalPages = pageResult?.meta.totalPages ?? 0
+
   const counts = {
-    all: data.length,
-    booked: data.filter((r) => r.status === 'booked').length,
-    cancelled: data.filter((r) => r.status === 'cancelled').length,
+    booked: summary.filter((r) => r.status === 'booked').length,
+    cancelled: summary.filter((r) => r.status === 'cancelled').length,
   }
-  const todayCount = data.filter((r) => r.dateGroup === 'Hoy' && r.status !== 'cancelled').length
-  const todayRevenue = data.filter((r) => r.dateGroup === 'Hoy' && r.status === 'booked').reduce((acc, r) => acc + r.price, 0)
+  const todayCount = summary.filter((r) => r.dateGroup === 'Hoy' && r.status !== 'cancelled').length
+  const todayRevenue = summary.filter((r) => r.dateGroup === 'Hoy' && r.status === 'booked').reduce((acc, r) => acc + r.price, 0)
 
   // Sólo reservas no canceladas: lo cancelado no es plata que el complejo espera cobrar.
-  const pending = data.filter((r) => r.status === 'booked' && r.paymentStatus !== 'PAID')
+  const pending = summary.filter((r) => r.status === 'booked' && r.paymentStatus !== 'PAID')
   const pendingAmount = pending.reduce((acc, r) => acc + (r.price - (r.amountPaid ?? 0)), 0)
 
-  const selectedReservation = selected !== null ? data.find((r) => r.id === selected) : undefined
-  const payingReservation = paying !== null ? data.find((r) => r.id === paying) : undefined
+  // El panel de detalle y el modal de cobro sólo pueden abrirse desde una fila visible.
+  const selectedReservation = selected !== null ? rows.find((r) => r.id === selected) : undefined
+  const payingReservation = paying !== null ? rows.find((r) => r.id === paying) : undefined
 
   const handleCancel = () => {
     if (!selected) return
@@ -92,7 +138,7 @@ export default function AdminReservationsPage() {
   return (
     <AdminShell
       title="Reservas"
-      subtitle={`${counts.booked} confirmadas · ${counts.cancelled} canceladas`}
+      subtitle={total === 1 ? '1 reserva' : `${total.toLocaleString('es-AR')} reservas`}
     >
       <div className="h-full flex overflow-hidden">
         <div className="flex-1 flex flex-col overflow-hidden">
@@ -100,9 +146,9 @@ export default function AdminReservationsPage() {
           <div className="flex-none flex bg-white border-b border-ink-100">
             {[
               { label: 'Hoy', value: String(todayCount), unit: 'reservas', color: 'var(--text-strong)' },
-              { label: 'Canceladas', value: String(counts.cancelled), unit: 'total', color: '#B91C1C' },
+              { label: 'Canceladas', value: String(counts.cancelled), unit: `últimos ${SUMMARY_DAYS} días`, color: '#B91C1C' },
               { label: 'Ingresos hoy', value: priceLabel(todayRevenue), unit: 'confirmados', color: 'var(--green-700)', mono: true },
-              { label: 'Sin cobrar', value: priceLabel(pendingAmount), unit: `${pending.length} reservas`, color: 'var(--red-700)', mono: true },
+              { label: 'Sin cobrar', value: priceLabel(pendingAmount), unit: `${pending.length} reservas · últimos ${SUMMARY_DAYS} días`, color: 'var(--red-700)', mono: true },
             ].map((k, i) => (
               <div key={k.label} className="flex-1 px-5 py-3" style={{ borderLeft: i ? '1px solid var(--border-subtle)' : 'none' }}>
                 <p className="text-[11px] font-semibold text-ink-500 mb-0.5">{k.label}</p>
@@ -180,7 +226,7 @@ export default function AdminReservationsPage() {
                     onClick={() => setStatusFilter(o.key)}
                     className={cn('px-3 py-1.5 border-r border-ink-100 text-[12px] cursor-pointer', on ? 'bg-white font-bold text-ink-900 shadow-xs' : 'font-medium text-ink-500')}
                   >
-                    {o.label} {o.key !== 'all' && `(${counts[o.key]})`}
+                    {o.label}
                   </button>
                 )
               })}
@@ -200,13 +246,13 @@ export default function AdminReservationsPage() {
               <p className="text-center text-body-sm text-ink-400 py-12">Cargando reservas…</p>
             ) : isError ? (
               <p className="text-center text-body-sm text-red-600 py-12">No pudimos cargar las reservas.</p>
-            ) : filtered.length === 0 ? (
+            ) : rows.length === 0 ? (
               <div className="py-12 text-center text-ink-400">
                 <SearchX size={28} className="mx-auto text-ink-300" />
                 <p className="mt-2 text-[14px]">Sin resultados</p>
               </div>
             ) : (
-              filtered.map((r) => {
+              rows.map((r) => {
                 const on = selected === r.id
                 const color = courtColor(r.sport)
                 const status = STATUS_META[r.status]
@@ -263,6 +309,37 @@ export default function AdminReservationsPage() {
               })
             )}
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex-none flex items-center justify-between px-5 py-2.5 bg-white border-t border-ink-100">
+              <p className="text-[12px] text-ink-500">
+                Página <span className="font-mono font-semibold text-ink-900">{page}</span> de{' '}
+                <span className="font-mono font-semibold text-ink-900">{totalPages}</span>
+              </p>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  aria-label="Página anterior"
+                  data-testid="reservations-prev-page"
+                  className="p-1.5 border border-ink-100 rounded-md bg-ink-50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft size={14} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  aria-label="Página siguiente"
+                  data-testid="reservations-next-page"
+                  className="p-1.5 border border-ink-100 rounded-md bg-ink-50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight size={14} aria-hidden />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {selectedReservation && (

@@ -21,7 +21,10 @@ export default function AdminAgendaPage() {
   const [modalPrefill, setModalPrefill] = useState<BookingPrefill | null>(null)
 
   const { data: rawCourts, isLoading: courtsLoading } = useCourts(businessId)
-  const { data: rawBookings, isLoading: bookingsLoading } = useBookings(businessId)
+  const { data: rawBookings, isLoading: bookingsLoading } = useBookings(businessId, {
+    date,
+    status: 'ACTIVE',
+  })
   const { data: rawExceptions } = useExceptionRules(businessId)
   const cancelBooking = useCancelBooking(businessId ?? '')
 
@@ -63,8 +66,8 @@ export default function AdminAgendaPage() {
 
   const data: AgendaBooking[] = useMemo(
     () => [
+      // El día y el estado ya vienen filtrados por el server.
       ...(rawBookings ?? [])
-        .filter((b) => b.date === date && b.status === 'ACTIVE')
         .map((b) => ({
           id: b.id,
           cid: b.courtId,
@@ -77,7 +80,7 @@ export default function AdminAgendaPage() {
         })),
       ...blockedBlocks,
     ],
-    [rawBookings, date, blockedBlocks],
+    [rawBookings, blockedBlocks],
   )
 
   const handleSelect = useCallback((b: AgendaBooking) => {

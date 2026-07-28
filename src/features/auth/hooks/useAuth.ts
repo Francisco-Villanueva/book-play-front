@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { authApi } from '../api/authApi'
+import { usersApi } from '@/features/users/api/usersApi'
 import { useAuthStore } from '../store/authStore'
 import type { User } from '@/shared/types/domain'
 import type {
@@ -17,9 +18,16 @@ export function getPostLoginPath(user: User): string {
   return '/dashboard'
 }
 
+// Sólo rutas internas: un ?next= absoluto convertiría el login en un redirect abierto.
+function safeNext(value: string | null): string | null {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return null
+  return value
+}
+
 export function useLogin() {
   const { setAuth } = useAuthStore()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
 
   return useMutation({
     mutationFn: (data: LoginFormData) => authApi.login(data.email, data.password),
@@ -27,9 +35,9 @@ export function useLogin() {
       setAuth(data.user, data.accessToken)
       // The login response doesn't include business memberships — fetch the
       // enriched profile so the redirect can tell player vs business admin apart.
-      const { data: fullUser } = await authApi.me()
+      const { data: fullUser } = await usersApi.me()
       setAuth(fullUser, data.accessToken)
-      navigate(getPostLoginPath(fullUser), { replace: true })
+      navigate(safeNext(params.get('next')) ?? getPostLoginPath(fullUser), { replace: true })
     },
   })
 }
@@ -42,13 +50,17 @@ interface RegisterMutationInput extends RegisterFormData {
 export function useRegister() {
   const { setAuth } = useAuthStore()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
 
   return useMutation({
     mutationFn: (data: RegisterMutationInput) =>
       authApi.register(data.name, data.userName, data.email, data.password),
     onSuccess: ({ data }, variables) => {
       setAuth(data.user, data.accessToken)
-      navigate(variables.asBusiness ? '/onboarding' : getPostLoginPath(data.user), { replace: true })
+      const target = variables.asBusiness
+        ? '/onboarding'
+        : (safeNext(params.get('next')) ?? getPostLoginPath(data.user))
+      navigate(target, { replace: true })
     },
   })
 }

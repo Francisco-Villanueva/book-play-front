@@ -8,15 +8,19 @@ import { TrendChart } from '@/features/admin/components/dashboard/TrendChart'
 import { computeKpis, computeTimeline, computeTrend, computeAttention } from '@/features/admin/components/dashboard/dashboardData'
 import { useBookings } from '@/features/bookings/hooks/useBookings'
 import { useCourts } from '@/features/courts/hooks/useCourts'
-import { formatLongDateEs, timeToHours, todayISO } from '@/shared/utils/date'
+import { addDaysISO, formatLongDateEs, timeToHours, todayISO } from '@/shared/utils/date'
 
 export default function AdminDashboardPage() {
   const { businessId } = useParams<{ businessId: string }>()
   const navigate = useNavigate()
-  const { data: bookings, isLoading, isError } = useBookings(businessId)
-  const { data: courts } = useCourts(businessId)
-
   const today = todayISO()
+  // El panel sólo mira hoy (KPIs, timeline, avisos) y los 7 días previos
+  // (tendencia y promedio de ingresos). Pedir más sería traer historial al pedo.
+  const { data: bookings, isLoading, isError } = useBookings(businessId, {
+    dateFrom: addDaysISO(today, -7),
+    dateTo: today,
+  })
+  const { data: courts } = useCourts(businessId)
   const list = useMemo(() => bookings ?? [], [bookings])
   const courtList = useMemo(() => courts ?? [], [courts])
 

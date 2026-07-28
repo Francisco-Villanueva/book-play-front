@@ -20,7 +20,9 @@ export function SlotPicker({ businessId, court, initialDate, onBack, onPick }: S
   const [date, setDate] = useState(initialDate || NEXT_DAYS[0]!)
   const [sel, setSel] = useState<string | null>(null)
   const { data, isLoading, isError } = useAvailability(businessId, court.id, date)
-  const slots = data?.availableSlots ?? []
+  // Complejo con la suscripción vencida: se muestra sin horarios, sin exponerle
+  // al jugador el motivo comercial.
+  const slots = data?.acceptsBookings === false ? [] : (data?.availableSlots ?? [])
 
   const subtitle = [
     humanizeSport(court.sportType),

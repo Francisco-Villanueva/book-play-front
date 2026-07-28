@@ -1,12 +1,20 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, ChevronRight, Bell, Repeat, Shield, HelpCircle, Building2 } from 'lucide-react'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { LogOut, ChevronRight, Bell, Repeat, Shield, HelpCircle, Building2, Pencil } from 'lucide-react'
 import { PlayerAppShell } from '@/features/bookings/components/PlayerAppShell'
 import { AppHeader } from '@/features/bookings/components/AppHeader'
 import { Avatar } from '@/shared/components/Avatar'
+import { Button } from '@/shared/components/Button'
+import { Input } from '@/shared/components/Input'
+import { PhoneInput } from '@/shared/components/PhoneInput'
 import { Switch } from '@/shared/components/Switch'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useMyBookings } from '@/features/bookings/hooks/useBookings'
+import { useUpdateProfile } from '@/features/users/hooks/useUsers'
+import { updateProfileSchema, type UpdateProfileFormData } from '@/features/users/schemas/updateProfileSchema'
+import { getApiErrorMessage } from '@/shared/utils/apiError'
 import { cn } from '@/shared/utils/cn'
 import { todayISO } from '@/shared/utils/date'
 
@@ -14,6 +22,62 @@ const MENU = [
   { icon: Shield, label: 'Privacidad' },
   { icon: HelpCircle, label: 'Ayuda y soporte' },
 ]
+
+function EditProfileForm({
+  defaults,
+  onDone,
+}: {
+  defaults: UpdateProfileFormData
+  onDone: () => void
+}) {
+  const updateProfile = useUpdateProfile()
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<UpdateProfileFormData>({
+    resolver: zodResolver(updateProfileSchema),
+    defaultValues: defaults,
+  })
+
+  const submit = handleSubmit((data) =>
+    updateProfile.mutate(
+      { name: data.name, ...(data.phone?.trim() ? { phone: data.phone.trim() } : {}) },
+      { onSuccess: onDone },
+    ),
+  )
+
+  return (
+    <form onSubmit={submit} className="bg-white border border-ink-100 rounded-lg shadow-sm p-4 mb-5 flex flex-col gap-3.5">
+      <Input label="Nombre completo" autoComplete="name" error={errors.name?.message} {...register('name')} />
+      <Controller
+        name="phone"
+        control={control}
+        render={({ field }) => (
+          <PhoneInput
+            label="Teléfono"
+            value={field.value ?? ''}
+            onChange={field.onChange}
+            onBlur={field.onBlur}
+            error={errors.phone?.message}
+          />
+        )}
+      />
+      {updateProfile.isError && (
+        <p className="text-caption text-red-600">{getApiErrorMessage(updateProfile.error)}</p>
+      )}
+      <div className="flex gap-2.5">
+        <Button type="submit" full disabled={updateProfile.isPending}>
+          {updateProfile.isPending ? 'Guardando…' : 'Guardar'}
+        </Button>
+        <Button type="button" variant="ghost" full onClick={onDone} disabled={updateProfile.isPending}>
+          Cancelar
+        </Button>
+      </div>
+    </form>
+  )
+}
 
 function Stat({ n, l }: { n: string; l: string }) {
   return (
@@ -29,6 +93,7 @@ export default function ProfilePage() {
   const navigate = useNavigate()
   const [notif, setNotif] = useState(true)
   const [recurring, setRecurring] = useState(false)
+  const [editing, setEditing] = useState(false)
   const name = user?.name ?? 'Jugador'
   const email = user?.email ?? ''
   const hasBusiness = (user?.businesses?.length ?? 0) > 0
@@ -53,11 +118,30 @@ export default function ProfilePage() {
       <div className="flex-1 overflow-y-auto px-4 py-5">
         <div className="flex items-center gap-3.5 mb-5">
           <Avatar name={name} size="lg" />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="font-display font-bold text-h4 text-ink-900 truncate">{name}</p>
             <p className="text-caption text-ink-500 mt-0.5 truncate">{email}</p>
+            {user?.phone && <p className="text-caption text-ink-400 mt-0.5 truncate">{user.phone}</p>}
           </div>
+          {!editing && (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              aria-label="Editar perfil"
+              data-testid="profile-edit-button"
+              className="flex-none w-9 h-9 rounded-sm border border-ink-100 bg-white flex items-center justify-center text-ink-500 cursor-pointer"
+            >
+              <Pencil size={16} aria-hidden />
+            </button>
+          )}
         </div>
+
+        {editing && (
+          <EditProfileForm
+            defaults={{ name: user?.name ?? '', phone: user?.phone ?? '' }}
+            onDone={() => setEditing(false)}
+          />
+        )}
 
         <div className="flex gap-2.5 mb-5">
           {stats.map((s) => (

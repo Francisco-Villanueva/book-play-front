@@ -1,12 +1,34 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { bookingsApi, type UpdateBookingPaymentInput } from '../api/bookingsApi'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { bookingsApi, type BookingFilters, type UpdateBookingPaymentInput } from '../api/bookingsApi'
 import { bookingsKeys } from '../api/bookingsKeys'
 
-export function useBookings(businessId: string | undefined) {
+type BookingRangeFilters = Omit<BookingFilters, 'page' | 'limit'>
+
+// Devuelve el rango completo ya aplanado, para las vistas que agregan sobre él.
+// El rango es obligatorio en la práctica: sin filtros de fecha esto recorre todo
+// el historial del complejo, que es justamente lo que queremos evitar.
+export function useBookings(
+  businessId: string | undefined,
+  filters: BookingRangeFilters = {},
+) {
   return useQuery({
-    queryKey: bookingsKeys.all(businessId ?? ''),
-    queryFn: () => bookingsApi.listByBusiness(businessId!).then((res) => res.data),
+    queryKey: bookingsKeys.list(businessId ?? '', filters),
+    queryFn: () => bookingsApi.listAllByBusiness(businessId!, filters),
     enabled: !!businessId,
+  })
+}
+
+// Una página suelta, para las tablas que paginan del lado del servidor.
+export function useBookingsPage(
+  businessId: string | undefined,
+  filters: BookingFilters = {},
+) {
+  return useQuery({
+    queryKey: bookingsKeys.page(businessId ?? '', filters),
+    queryFn: () => bookingsApi.listByBusiness(businessId!, filters).then((res) => res.data),
+    enabled: !!businessId,
+    // Evita el parpadeo a "cargando" al cambiar de página o de filtro.
+    placeholderData: keepPreviousData,
   })
 }
 
