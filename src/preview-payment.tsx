@@ -12,6 +12,7 @@ const reservation: Reservation = {
   sport: 'futbol5',
   playerName: 'Juan Pérez',
   phone: '+54 9 291 555-1234',
+  date: '2026-07-25',
   dateGroup: 'Hoy',
   dayOfWeek: 'vie',
   dateLabel: '25 jul',
@@ -24,6 +25,7 @@ const reservation: Reservation = {
   totalPlayers: 10,
   playersPaid: 4,
   paymentNotes: null,
+  isRecurring: false,
 }
 
 createRoot(document.getElementById('root')!).render(

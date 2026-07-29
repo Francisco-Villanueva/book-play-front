@@ -5,6 +5,7 @@ import {
   CalendarDays,
   CalendarRange,
   LayoutGrid,
+  Repeat,
   Ticket,
   Users,
   Settings,
@@ -41,6 +42,7 @@ const NAV = [
   },
   { key: "canchas", icon: LayoutGrid, label: "Canchas", path: "/courts" },
   { key: "reservas", icon: Ticket, label: "Reservas", path: "/bookings" },
+  { key: "fijos", icon: Repeat, label: "Turnos fijos", path: "/turnos-fijos" },
   { key: "clientes", icon: Users, label: "Clientes", path: "/clients" },
   {
     key: "torneos",

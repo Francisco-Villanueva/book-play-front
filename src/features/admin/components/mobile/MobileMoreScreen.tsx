@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  CalendarRange, ChevronRight, Clock, CreditCard, LayoutGrid, LogOut, Repeat,
+  CalendarRange, CalendarSync, ChevronRight, Clock, CreditCard, LayoutGrid, LogOut, Repeat,
   Settings, Ticket, User, UserPlus, Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -28,6 +28,7 @@ const GROUPS: MoreGroup[] = [
     label: 'Gestión',
     items: [
       { key: 'canchas', icon: LayoutGrid, label: 'Canchas', path: '/courts', minRole: 'ADMIN' },
+      { key: 'fijos', icon: CalendarSync, label: 'Turnos fijos', path: '/turnos-fijos' },
       { key: 'clientes', icon: Users, label: 'Clientes', path: '/clients' },
       { key: 'horarios', icon: Clock, label: 'Horarios y excepciones', path: '/horarios', minRole: 'ADMIN' },
       { key: 'semanal', icon: CalendarRange, label: 'Vista semanal', path: '/schedule' },

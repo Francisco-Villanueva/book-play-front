@@ -1,4 +1,4 @@
-import { Banknote, CheckCircle2, Clock, MapPin, MessageCircle, Phone, Wallet } from 'lucide-react'
+import { Banknote, CheckCircle2, Clock, MapPin, MessageCircle, Phone, Repeat, Wallet } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { formatMoneyARS } from '@/shared/utils/date'
 import { durationLabel, hFmt, initials, PAYMENT_META } from '../reservationTypes'
@@ -38,6 +38,12 @@ export function MobileBookingDetail({
           </h2>
           {booking.ph && (
             <p className="tnum font-mono text-caption text-ink-500 mt-0.5">{booking.ph}</p>
+          )}
+          {booking.isRecurring && (
+            <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-full text-[11px] font-bold border border-green-200 bg-green-50 text-green-700">
+              <Repeat size={10} aria-hidden />
+              Turno fijo
+            </span>
           )}
         </div>
         <span
@@ -108,7 +114,7 @@ export function MobileBookingDetail({
         className="w-full h-12 rounded-md border-[1.5px] border-ink-200 bg-white cursor-pointer font-body font-bold text-body-sm"
         style={{ color: isBlocked ? 'var(--text-body)' : 'var(--red-600)' }}
       >
-        {isBlocked ? 'Quitar bloqueo' : 'Cancelar reserva'}
+        {isBlocked ? 'Quitar bloqueo' : booking.isRecurring ? 'Cancelar sólo esta fecha' : 'Cancelar reserva'}
       </button>
     </Sheet>
   )

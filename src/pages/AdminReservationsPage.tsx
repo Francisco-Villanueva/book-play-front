@@ -25,6 +25,7 @@ function toReservation(b: Booking): Reservation {
     sport: b.court?.sportType ?? '',
     playerName: b.guestName ?? b.user?.name ?? 'Jugador',
     phone: b.guestPhone ?? '—',
+    date: b.date,
     dateGroup: relativeDayLabel(b.date),
     dayOfWeek: d.toLocaleDateString('es-AR', { weekday: 'short' }),
     dateLabel: d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }),
@@ -37,6 +38,7 @@ function toReservation(b: Booking): Reservation {
     totalPlayers: b.totalPlayers ?? null,
     playersPaid: b.playersPaid ?? null,
     paymentNotes: b.paymentNotes ?? null,
+    isRecurring: b.recurringBookingId != null,
   }
 }
 
@@ -126,7 +128,11 @@ export default function AdminReservationsPage() {
   const todayRevenue = summary.filter((r) => r.dateGroup === 'Hoy' && r.status === 'booked').reduce((acc, r) => acc + r.price, 0)
 
   // Sólo reservas no canceladas: lo cancelado no es plata que el complejo espera cobrar.
-  const pending = summary.filter((r) => r.status === 'booked' && r.paymentStatus !== 'PAID')
+  // Y sólo turnos ya jugados: un turno fijo materializa 12 semanas hacia adelante,
+  // y contarlas como deuda dejaría el indicador inservible.
+  const pending = summary.filter(
+    (r) => r.status === 'booked' && r.paymentStatus !== 'PAID' && r.date <= todayISO(),
+  )
   const pendingAmount = pending.reduce((acc, r) => acc + (r.price - (r.amountPaid ?? 0)), 0)
 
   // El panel de detalle y el modal de cobro sólo pueden abrirse desde una fila visible.

@@ -1,4 +1,4 @@
-import { Clock } from 'lucide-react'
+import { Clock, Repeat } from 'lucide-react'
 import { hFmt, toY, initials, SLOT_H, STATUS_META, type AgendaBooking } from './agendaTypes'
 
 interface AgendaBookingBlockProps {
@@ -51,6 +51,9 @@ export function AgendaBookingBlock({ booking, courtColor, isSelected, onClick }:
             <span className="text-[12px] font-bold overflow-hidden text-ellipsis whitespace-nowrap flex-1 font-body" style={{ color: status.fg }}>
               {booking.name}
             </span>
+            {booking.isRecurring && (
+              <Repeat size={11} className="flex-none opacity-70" style={{ color: status.fg }} aria-label="Turno fijo" />
+            )}
           </div>
           <div className="text-[11px] font-mono font-semibold pl-[26px] opacity-80" style={{ color: status.fg }}>
             {hFmt(booking.s)} – {hFmt(booking.e)}

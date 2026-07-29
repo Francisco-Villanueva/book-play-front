@@ -2,6 +2,7 @@ export type GlobalRole = 'MASTER' | 'PLAYER'
 export type BusinessRole = 'OWNER' | 'ADMIN' | 'STAFF'
 export type BookingStatus = 'ACTIVE' | 'CANCELLED'
 export type BookingPaymentStatus = 'UNPAID' | 'PARTIAL' | 'PAID'
+export type RecurringBookingStatus = 'ACTIVE' | 'ENDED'
 export type SubscriptionStatus = 'TRIALING' | 'ACTIVE' | 'PAST_DUE' | 'SUSPENDED' | 'CANCELLED'
 // The backend's availability endpoint only returns open windows (no per-slot
 // booked/pending/blocked breakdown) — every slot rendered from real data is
@@ -115,10 +116,65 @@ export interface Booking {
   playersPaid?: number | null
   paymentNotes?: string | null
   notes?: string | null
+  // Instancia de un turno fijo cuando no es null (BR-028).
+  recurringBookingId?: string | null
   court?: Court
   business?: Business
   user?: User
   createdAt: string
+}
+
+export interface RecurringBooking {
+  id: string
+  businessId: string
+  courtId: string
+  userId?: string | null
+  guestName?: string | null
+  guestPhone?: string | null
+  guestEmail?: string | null
+  // 0 = domingo, igual que Date.getDay()
+  dayOfWeek: number
+  startTime: string
+  startDate: string
+  endDate?: string | null
+  generatedUntil: string
+  status: RecurringBookingStatus
+  notes?: string | null
+  endedAt?: string | null
+  court?: Court
+  createdAt: string
+}
+
+export interface RecurringOccurrence {
+  date: string
+  available: boolean
+  reason?: string
+}
+
+export interface RecurringPreview {
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  until: string
+  occurrences: RecurringOccurrence[]
+}
+
+export interface RecurringGenerationReport {
+  created: number
+  skipped: number
+  occurrences: { date: string; status: 'CREATED' | 'SKIPPED'; reason?: string }[]
+  generatedUntil: string
+}
+
+// Reservas que se caerían al aplicar un bloqueo (ExceptionRule) — BR-029.
+export interface AffectedBooking {
+  id: string
+  courtName: string
+  date: string
+  startTime: string
+  endTime: string
+  clientName: string
+  isRecurring: boolean
 }
 
 export interface GuestCancellationInfo {

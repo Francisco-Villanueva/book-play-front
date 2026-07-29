@@ -17,6 +17,7 @@ import AdminSchedulePage from '@/pages/AdminSchedulePage'
 import AdminCourtsPage from '@/pages/AdminCourtsPage'
 import AdminReservationsPage from '@/pages/AdminReservationsPage'
 import AdminClientsPage from '@/pages/AdminClientsPage'
+import AdminRecurringPage from '@/pages/AdminRecurringPage'
 import AdminSettingsPage from '@/pages/AdminSettingsPage'
 import AdminMorePage from '@/pages/AdminMorePage'
 import AdminProfilePage from '@/pages/AdminProfilePage'
@@ -26,6 +27,7 @@ import AdminBillingPage from '@/pages/AdminBillingPage'
 import PublicBookingPage from '@/pages/PublicBookingPage'
 import AcceptInvitationPage from '@/pages/AcceptInvitationPage'
 import GuestBookingCancelPage from '@/pages/GuestBookingCancelPage'
+import GuestRecurringPage from '@/pages/GuestRecurringPage'
 import OnboardingPage from '@/pages/OnboardingPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import UnauthorizedPage from '@/pages/UnauthorizedPage'
@@ -66,6 +68,7 @@ export const router = createBrowserRouter([
       { path: '/reset-password',                element: <ResetPasswordPage /> },
       { path: '/businesses/:businessId/book',   element: <PublicBookingPage /> },
       { path: '/businesses/:businessId/bookings/:bookingId/cancel', element: <GuestBookingCancelPage /> },
+      { path: '/businesses/:businessId/turnos-fijos/:seriesId', element: <GuestRecurringPage /> },
       // Destino del mail de invitación al equipo; el token viaja por query string.
       { path: '/invitations/accept',            element: <AcceptInvitationPage /> },
       { path: '/unauthorized',                  element: <UnauthorizedPage /> },
@@ -88,6 +91,7 @@ export const router = createBrowserRouter([
           { path: '/admin/:businessId/schedule',           element: <AdminSchedulePage /> },
           { path: '/admin/:businessId/courts',             element: <AdminCourtsPage /> },
           { path: '/admin/:businessId/bookings',           element: <AdminReservationsPage /> },
+          { path: '/admin/:businessId/turnos-fijos',       element: <AdminRecurringPage /> },
           { path: '/admin/:businessId/clients',            element: <AdminClientsPage /> },
           { path: '/admin/:businessId/tournaments',        element: <AdminTournamentsPage /> },
           { path: '/admin/:businessId/settings',           element: <AdminSettingsPage /> },

@@ -1,5 +1,5 @@
 import { apiClient } from '@/shared/lib/apiClient'
-import type { ExceptionRule } from '@/shared/types/domain'
+import type { AffectedBooking, ExceptionRule } from '@/shared/types/domain'
 
 interface ExceptionRulePayload {
   date: string
@@ -13,6 +13,14 @@ interface ExceptionRulePayload {
 export const exceptionRulesApi = {
   listByBusiness: (businessId: string) =>
     apiClient.get<ExceptionRule[]>(`/businesses/${businessId}/exception-rules`),
+
+  // Qué reservas se caen si se aplica el bloqueo. Se consulta ANTES de crearlo:
+  // crear la excepción las cancela y les manda un correo (BR-029).
+  previewImpact: (businessId: string, data: ExceptionRulePayload) =>
+    apiClient.post<{ total: number; bookings: AffectedBooking[] }>(
+      `/businesses/${businessId}/exception-rules/preview-impact`,
+      data,
+    ),
 
   create: (businessId: string, data: ExceptionRulePayload) =>
     apiClient.post<ExceptionRule>(`/businesses/${businessId}/exception-rules`, data),

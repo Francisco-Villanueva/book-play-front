@@ -3,11 +3,24 @@ import { cn } from '@/shared/utils/cn'
 import { Sheet } from './Sheet'
 import { PhoneInput } from '@/shared/components/PhoneInput'
 import { useAvailability, useBookingsPage, useCreateBooking } from '@/features/bookings/hooks/useBookings'
+import {
+  useCreateRecurring,
+  usePreviewRecurring,
+} from '@/features/recurring-bookings/hooks/useRecurringBookings'
+import { RecurringPreviewPanel } from '../RecurringPreviewPanel'
 import { getApiErrorMessage } from '@/shared/utils/apiError'
 import { isValidArgentinePhone } from '@/shared/utils/phone'
-import { formatMoneyARS, shortDateLabel, timeToHours, todayISO } from '@/shared/utils/date'
+import {
+  dayOfWeek,
+  formatMoneyARS,
+  shortDateLabel,
+  timeToHours,
+  todayISO,
+  weekdayNameEs,
+} from '@/shared/utils/date'
 import { hFmt, type AgendaCourt } from '../agendaTypes'
 import { initials } from '../reservationTypes'
+import type { RecurringPreview } from '@/shared/types/domain'
 
 export interface NewBookingPrefill {
   courtId?: string | undefined
@@ -44,8 +57,13 @@ export function MobileNewBookingSheet({
   const [phone, setPhone] = useState('')
   const [note, setNote] = useState('')
   const [nameFocused, setNameFocused] = useState(false)
+  const [isFixed, setIsFixed] = useState(false)
+  const [email, setEmail] = useState('')
+  const [preview, setPreview] = useState<RecurringPreview | null>(null)
 
   const createBooking = useCreateBooking(businessId)
+  const previewRecurring = usePreviewRecurring(businessId)
+  const createRecurring = useCreateRecurring(businessId)
   const { data: availability, isLoading: slotsLoading } = useAvailability(
     businessId,
     courtId ?? undefined,
@@ -68,8 +86,17 @@ export function MobileNewBookingSheet({
   const step1Ok = courtId != null && startTime != null
   const step2Ok = name.trim().length >= 2 && isValidArgentinePhone(phone)
 
-  const handleSave = () => {
+  // El turno fijo no se guarda derecho: primero muestra qué fechas agarra y
+  // cuáles quedan afuera, y recién ahí se confirma.
+  const handleStep2 = () => {
     if (!courtId || !startTime) return
+    if (isFixed) {
+      previewRecurring.mutate(
+        { courtId, startDate: date, startTime },
+        { onSuccess: (data) => { setPreview(data); setStep(3) } },
+      )
+      return
+    }
     createBooking.mutate(
       {
         courtId,
@@ -83,23 +110,60 @@ export function MobileNewBookingSheet({
     )
   }
 
+  const handleConfirmFixed = () => {
+    if (!courtId || !startTime) return
+    createRecurring.mutate(
+      {
+        courtId,
+        startDate: date,
+        startTime,
+        guestName: name.trim(),
+        guestPhone: phone,
+        ...(email.trim() ? { guestEmail: email.trim() } : {}),
+        ...(note.trim() ? { notes: note.trim() } : {}),
+      },
+      { onSuccess: () => onSaved(name.trim()) },
+    )
+  }
+
+  const totalSteps = isFixed ? 3 : 2
+  const activeMutation =
+    step === 3 ? createRecurring : isFixed ? previewRecurring : createBooking
+
+  const stepCta = () => {
+    if (step === 1) return { label: 'Continuar', disabled: !step1Ok, onClick: () => setStep(2) }
+    if (step === 2) {
+      return {
+        label: activeMutation.isPending
+          ? (isFixed ? 'Revisando…' : 'Guardando…')
+          : (isFixed ? 'Continuar' : 'Confirmar reserva'),
+        disabled: !step2Ok || activeMutation.isPending,
+        onClick: handleStep2,
+      }
+    }
+    return {
+      label: createRecurring.isPending ? 'Guardando…' : 'Confirmar turno fijo',
+      disabled: createRecurring.isPending,
+      onClick: handleConfirmFixed,
+    }
+  }
+
   return (
     <SheetShell
       step={step}
+      totalSteps={totalSteps}
       onClose={onClose}
-      onBack={() => (step === 2 && !startedComplete ? setStep(1) : onClose())}
-      backLabel={step === 2 && !startedComplete ? '‹ Atrás' : 'Cancelar'}
-      cta={
-        step === 1
-          ? { label: 'Continuar', disabled: !step1Ok, onClick: () => setStep(2) }
-          : {
-              label: createBooking.isPending ? 'Guardando…' : 'Confirmar reserva',
-              disabled: !step2Ok || createBooking.isPending,
-              onClick: handleSave,
-            }
-      }
+      onBack={() => {
+        if (step === 3) return setStep(2)
+        if (step === 2 && !startedComplete) return setStep(1)
+        onClose()
+      }}
+      backLabel={step > 1 && !(step === 2 && startedComplete) ? '‹ Atrás' : 'Cancelar'}
+      cta={stepCta()}
     >
-      {step === 1 ? (
+      {step === 3 && preview ? (
+        <RecurringPreviewPanel preview={preview} />
+      ) : step === 1 ? (
         <div>
           <p className="text-overline text-ink-400 mb-2.5">Fecha</p>
           <input
@@ -191,6 +255,40 @@ export function MobileNewBookingSheet({
             </p>
           )}
 
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isFixed}
+            onClick={() => setIsFixed((v) => !v)}
+            data-testid="mobile-booking-fixed-toggle"
+            className={cn(
+              'w-full flex items-center justify-between gap-3 px-3.5 py-3 mb-4 rounded-md border-[1.5px] text-left cursor-pointer',
+              isFixed ? 'border-green-500 bg-green-50' : 'border-ink-200 bg-white',
+            )}
+          >
+            <span className="min-w-0">
+              <span className="block font-bold text-[14px] text-ink-900">Turno fijo</span>
+              <span className="block text-[12px] text-ink-500 mt-0.5">
+                {isFixed
+                  ? `Se repite todos los ${weekdayNameEs(dayOfWeek(date))}`
+                  : 'Reservar este horario todas las semanas'}
+              </span>
+            </span>
+            <span
+              className={cn(
+                'flex-none w-[42px] h-[24px] rounded-full transition-colors relative',
+                isFixed ? 'bg-green-500' : 'bg-ink-200',
+              )}
+            >
+              <span
+                className={cn(
+                  'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white transition-all',
+                  isFixed ? 'left-[21px]' : 'left-[3px]',
+                )}
+              />
+            </span>
+          </button>
+
           <div className="relative mb-4">
             <label htmlFor="mobile-booking-name" className="block text-[12.5px] font-bold text-ink-700 mb-1.5">
               Nombre
@@ -235,6 +333,22 @@ export function MobileNewBookingSheet({
             <PhoneInput label="Teléfono" value={phone} onChange={setPhone} size="lg" required />
           </div>
 
+          {isFixed && (
+            <div className="mb-4">
+              <label htmlFor="mobile-booking-email" className="block text-[12.5px] font-bold text-ink-700 mb-1.5">
+                Email <span className="font-medium text-ink-400">(opcional)</span>
+              </label>
+              <input
+                id="mobile-booking-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Para mandarle el detalle del turno fijo"
+                className="w-full h-[50px] px-3.5 rounded-md border-[1.5px] border-ink-200 bg-white font-body text-[16px] text-ink-900 outline-none focus:border-green-500"
+              />
+            </div>
+          )}
+
           <div>
             <label htmlFor="mobile-booking-note" className="block text-[12.5px] font-bold text-ink-700 mb-1.5">
               Nota <span className="font-medium text-ink-400">(opcional)</span>
@@ -248,10 +362,10 @@ export function MobileNewBookingSheet({
             />
           </div>
 
-          {createBooking.isError && (
-            <p className="mt-3 text-body-sm text-red-600">{getApiErrorMessage(createBooking.error)}</p>
-          )}
         </div>
+      )}
+      {activeMutation.isError && (
+        <p className="mt-3 text-body-sm text-red-600">{getApiErrorMessage(activeMutation.error)}</p>
       )}
     </SheetShell>
   )
@@ -290,6 +404,7 @@ function useClientSuggestions(businessId: string, name: string): ClientSuggestio
 
 interface SheetShellProps {
   step: number
+  totalSteps: number
   children: ReactNode
   onClose: () => void
   onBack: () => void
@@ -297,13 +412,15 @@ interface SheetShellProps {
   cta: { label: string; disabled: boolean; onClick: () => void }
 }
 
-function SheetShell({ step, children, onClose, onBack, backLabel, cta }: SheetShellProps) {
+const SHEET_TITLES = ['Nueva reserva', 'Datos del turno', 'Confirmar turno fijo']
+
+function SheetShell({ step, totalSteps, children, onClose, onBack, backLabel, cta }: SheetShellProps) {
   return (
     <Sheet
       onClose={onClose}
       snap="full"
-      title={step === 1 ? 'Nueva reserva' : 'Datos del turno'}
-      subtitle={`Paso ${step} de 2`}
+      title={SHEET_TITLES[step - 1] ?? 'Nueva reserva'}
+      subtitle={`Paso ${step} de ${totalSteps}`}
       footer={
         <div className="flex gap-2.5">
           <button
@@ -326,7 +443,7 @@ function SheetShell({ step, children, onClose, onBack, backLabel, cta }: SheetSh
       }
     >
       <div className="flex gap-1.5 mb-4">
-        {[1, 2].map((i) => (
+        {Array.from({ length: totalSteps }, (_, i) => i + 1).map((i) => (
           <div
             key={i}
             className={cn('flex-1 h-[3px] rounded', i <= step ? 'bg-green-500' : 'bg-ink-200')}

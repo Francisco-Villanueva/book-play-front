@@ -25,6 +25,11 @@ export function dayOfWeek(iso: string): number {
   return new Date(iso + 'T12:00:00').getDay()
 }
 
+// "martes" — el día de la semana en plural natural para "todos los ___".
+export function weekdayNameEs(dow: number): string {
+  return (WEEKDAYS_LONG[dow] ?? '').toLowerCase()
+}
+
 export function formatShortDay(iso: string): { weekday: string; day: string } {
   const d = new Date(iso + 'T12:00:00')
   return { weekday: WEEKDAYS_SHORT[d.getDay()]!, day: String(d.getDate()) }

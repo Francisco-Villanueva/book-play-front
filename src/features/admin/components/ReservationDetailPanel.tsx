@@ -1,4 +1,4 @@
-import { X, MapPin, Calendar, Clock, Timer, Phone, Banknote, MessageCircle, Wallet } from 'lucide-react'
+import { X, MapPin, Calendar, Clock, Timer, Phone, Banknote, MessageCircle, Repeat, Wallet } from 'lucide-react'
 import { Button } from '@/shared/components/Button'
 import type { Reservation } from './reservationTypes'
 import { STATUS_META, PAYMENT_META, paymentDetail, hFmt, durationLabel, priceLabel, initials } from './reservationTypes'
@@ -48,13 +48,21 @@ export function ReservationDetailPanel({ reservation, courtColor, onClose, onCan
           </div>
           <div>
             <p className="font-bold text-[15px] text-ink-900 font-display">{reservation.playerName}</p>
-            <span
-              className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded-full text-[11px] font-bold border"
-              style={{ background: status.bg, borderColor: status.bd, color: status.fg }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full flex-none" style={{ background: status.fg }} />
-              {status.label}
-            </span>
+            <div className="flex items-center gap-1 flex-wrap mt-0.5">
+              <span
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-bold border"
+                style={{ background: status.bg, borderColor: status.bd, color: status.fg }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full flex-none" style={{ background: status.fg }} />
+                {status.label}
+              </span>
+              {reservation.isRecurring && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-bold border border-green-200 bg-green-50 text-green-700">
+                  <Repeat size={10} aria-hidden />
+                  Turno fijo
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -76,7 +84,9 @@ export function ReservationDetailPanel({ reservation, courtColor, onClose, onCan
           Registrar cobro
         </Button>
         {reservation.status !== 'cancelled' && (
-          <Button variant="outline" full onClick={onCancel} data-testid="reservation-cancel">Cancelar reserva</Button>
+          <Button variant="outline" full onClick={onCancel} data-testid="reservation-cancel">
+            {reservation.isRecurring ? 'Cancelar sólo esta fecha' : 'Cancelar reserva'}
+          </Button>
         )}
         {reservation.phone && (
           <Button variant="ghost" full leftIcon={<MessageCircle size={15} aria-hidden />}>

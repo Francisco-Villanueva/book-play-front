@@ -50,6 +50,9 @@ export interface AgendaBooking {
   note?: string | undefined
   st: BookingStatus
   p?: string | undefined
+  // Instancia de un turno fijo: se pinta distinto para que el encargado sepa que
+  // cancelarla libera una semana, no la serie.
+  isRecurring?: boolean | undefined
 }
 
 export const STATUS_META: Record<BookingStatus, { bg: string; bd: string; fg: string; label: string }> = {

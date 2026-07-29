@@ -62,6 +62,7 @@ export function useAgendaDay(businessId: string | undefined, date: string): Agen
       ...(b.guestPhone ? { ph: b.guestPhone } : {}),
       ...(b.notes ? { note: b.notes } : {}),
       st: 'booked' as const,
+      isRecurring: b.recurringBookingId != null,
       price: b.totalPrice ?? null,
       paymentStatus: b.paymentStatus ?? null,
       totalPlayers: b.totalPlayers ?? null,

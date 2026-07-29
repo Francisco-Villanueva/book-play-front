@@ -9,6 +9,7 @@ export interface Reservation {
   sport: string
   playerName: string
   phone: string
+  date: string
   dateGroup: 'Hoy' | 'Mañana' | 'Ayer' | string
   dayOfWeek: string
   dateLabel: string
@@ -21,6 +22,7 @@ export interface Reservation {
   totalPlayers: number | null
   playersPaid: number | null
   paymentNotes: string | null
+  isRecurring: boolean
 }
 
 export const STATUS_META: Record<ReservationStatus, { label: string; bg: string; fg: string; bd: string }> = {

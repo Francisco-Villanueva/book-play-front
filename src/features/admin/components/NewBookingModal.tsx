@@ -3,12 +3,22 @@ import { X } from 'lucide-react'
 import { Button } from '@/shared/components/Button'
 import { NewBookingModalStep1 } from './NewBookingModalStep1'
 import { NewBookingModalStep2, type BookingModalType } from './NewBookingModalStep2'
+import { RecurringPreviewPanel } from './RecurringPreviewPanel'
+import { BlockImpactPanel } from './BlockImpactPanel'
 import { useCreateBooking } from '@/features/bookings/hooks/useBookings'
-import { useCreateExceptionRule } from '@/features/exception-rules/hooks/useExceptionRules'
+import {
+  useCreateExceptionRule,
+  usePreviewExceptionImpact,
+} from '@/features/exception-rules/hooks/useExceptionRules'
+import {
+  useCreateRecurring,
+  usePreviewRecurring,
+} from '@/features/recurring-bookings/hooks/useRecurringBookings'
 import { getApiErrorMessage } from '@/shared/utils/apiError'
-import { formatLongDateEs, todayISO } from '@/shared/utils/date'
+import { dayOfWeek, formatLongDateEs, todayISO, weekdayNameEs } from '@/shared/utils/date'
 import { isValidArgentinePhone } from '@/shared/utils/phone'
 import { hFmt, type AgendaCourt, type BookingPrefill } from './agendaTypes'
+import type { AffectedBooking, RecurringPreview } from '@/shared/types/domain'
 
 interface NewBookingModalProps {
   businessId: string
@@ -20,6 +30,11 @@ interface NewBookingModalProps {
   onClose: () => void
   onSaved: () => void
 }
+
+// Una reserva suelta se confirma en 2 pasos. El turno fijo y el bloqueo suman un
+// tercero: los dos tocan muchas fechas/reservas de una, y el encargado tiene que
+// ver qué va a pasar antes de apretar el botón.
+const TITLES = ['Seleccionar turno', 'Datos del turno', 'Confirmar']
 
 export function NewBookingModal({ businessId, date: initialDate, courts, courtPrices, courtDurations, prefill, onClose, onSaved }: NewBookingModalProps) {
   const hasPrefill = prefill?.cid != null && prefill?.startH != null
@@ -33,38 +48,68 @@ export function NewBookingModal({ businessId, date: initialDate, courts, courtPr
   const [type, setType] = useState<BookingModalType>('booking')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
   const [note, setNote] = useState('')
   const [reason, setReason] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [recurringPreview, setRecurringPreview] = useState<RecurringPreview | null>(null)
+  const [blockImpact, setBlockImpact] = useState<AffectedBooking[] | null>(null)
+
   const createBooking = useCreateBooking(businessId)
   const createException = useCreateExceptionRule(businessId)
-  const mutation = type === 'booking' ? createBooking : createException
-  const slotHours = (cid ? courtDurations[cid] ?? 60 : 60) / 60
+  const createRecurring = useCreateRecurring(businessId)
+  const previewRecurring = usePreviewRecurring(businessId)
+  const previewImpact = usePreviewExceptionImpact(businessId)
 
+  const slotHours = (cid ? courtDurations[cid] ?? 60 : 60) / 60
   const court = courts.find((c) => c.id === cid)
   // A booking always charges the court's flat per-turno price, regardless of the
   // end time picked here — the actual reservation always spans court.slotDuration.
   const rawPrice = cid ? (courtPrices[cid] ?? 0) : null
   const priceStr = rawPrice ? `$${rawPrice.toLocaleString('es-AR')}` : null
 
-  const step1Ok = cid != null && startH != null && endH != null && endH > startH
-  const step2Ok = type === 'booking'
-    ? name.trim().length >= 2 && isValidArgentinePhone(phone)
-    : startH != null && endH != null && endH > startH
+  const activeMutation =
+    step === 3
+      ? type === 'fixed' ? createRecurring : createException
+      : type === 'fixed' ? previewRecurring : type === 'block' ? previewImpact : createBooking
 
-  const handleSave = () => {
-    if (cid == null || startH == null || endH == null) return
-    if (type === 'block') {
-      createException.mutate(
+  // La reserva suelta se cierra en el paso 2; los otros dos suman la confirmación.
+  const totalSteps = type === 'booking' ? 2 : 3
+
+  const step1Ok = cid != null && startH != null && endH != null && endH > startH
+  const step2Ok = type === 'block'
+    ? startH != null && endH != null && endH > startH
+    : name.trim().length >= 2 && isValidArgentinePhone(phone)
+
+  const blockPayload = () => ({
+    date,
+    startTime: hFmt(startH!),
+    endTime: hFmt(endH!),
+    isAvailable: false,
+    ...(reason.trim() ? { reason: reason.trim() } : {}),
+    courtIds: [cid!],
+  })
+
+  // El paso 2 no guarda directamente salvo para la reserva suelta: los otros dos
+  // pasan primero por el dry-run que arma el paso 3.
+  const handleContinueFromStep2 = () => {
+    if (cid == null || startH == null) return
+    if (type === 'fixed') {
+      previewRecurring.mutate(
         {
-          date,
+          courtId: cid,
+          startDate: date,
           startTime: hFmt(startH),
-          endTime: hFmt(endH),
-          isAvailable: false,
-          ...(reason.trim() ? { reason: reason.trim() } : {}),
-          courtIds: [cid],
+          ...(endDate ? { endDate } : {}),
         },
-        { onSuccess: onSaved },
+        { onSuccess: (data) => { setRecurringPreview(data); setStep(3) } },
       )
+      return
+    }
+    if (type === 'block') {
+      previewImpact.mutate(blockPayload(), {
+        onSuccess: (data) => { setBlockImpact(data.bookings); setStep(3) },
+      })
       return
     }
     createBooking.mutate(
@@ -80,6 +125,38 @@ export function NewBookingModal({ businessId, date: initialDate, courts, courtPr
     )
   }
 
+  const handleConfirm = () => {
+    if (cid == null || startH == null) return
+    if (type === 'fixed') {
+      createRecurring.mutate(
+        {
+          courtId: cid,
+          startDate: date,
+          startTime: hFmt(startH),
+          guestName: name.trim(),
+          guestPhone: phone,
+          ...(email.trim() ? { guestEmail: email.trim() } : {}),
+          ...(endDate ? { endDate } : {}),
+          ...(note ? { notes: note } : {}),
+        },
+        { onSuccess: onSaved },
+      )
+      return
+    }
+    createException.mutate(blockPayload(), { onSuccess: onSaved })
+  }
+
+  const confirmLabel =
+    type === 'fixed' ? 'Confirmar turno fijo'
+      : type === 'block' ? 'Confirmar bloqueo'
+        : 'Confirmar reserva'
+
+  const goBack = () => {
+    if (step === 3) return setStep(2)
+    if (step === 2 && !hasPrefill) return setStep(1)
+    onClose()
+  }
+
   return (
     <div
       role="presentation"
@@ -92,9 +169,9 @@ export function NewBookingModal({ businessId, date: initialDate, courts, courtPr
         <div className="flex-none px-[22px] pt-5 pb-4 border-b border-ink-100">
           <div className="flex items-center justify-between mb-3.5">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-ink-400 mb-0.5">Paso {step} de 2</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-ink-400 mb-0.5">Paso {step} de {totalSteps}</p>
               <h2 className="font-display font-bold text-[22px] tracking-tight text-ink-900">
-                {step === 1 ? 'Seleccionar turno' : 'Datos del turno'}
+                {TITLES[step - 1]}
               </h2>
             </div>
             <button
@@ -107,7 +184,7 @@ export function NewBookingModal({ businessId, date: initialDate, courts, courtPr
             </button>
           </div>
           <div className="flex gap-1.5">
-            {[1, 2].map((i) => (
+            {Array.from({ length: totalSteps }, (_, i) => i + 1).map((i) => (
               <div key={i} className="flex-1 h-[3px] rounded" style={{ background: i <= step ? 'var(--action-primary)' : 'var(--border-default)' }} />
             ))}
           </div>
@@ -115,7 +192,7 @@ export function NewBookingModal({ businessId, date: initialDate, courts, courtPr
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-[22px] py-5">
-          {step === 1 ? (
+          {step === 1 && (
             <NewBookingModalStep1
               courts={courts}
               courtPrices={courtPrices}
@@ -130,31 +207,55 @@ export function NewBookingModal({ businessId, date: initialDate, courts, courtPr
               endH={endH}
               setEndH={setEndH}
             />
-          ) : (
+          )}
+          {step === 2 && (
             <NewBookingModalStep2
               type={type} setType={setType}
               name={name} setName={setName}
               phone={phone} setPhone={setPhone}
+              email={email} setEmail={setEmail}
               note={note} setNote={setNote}
               reason={reason} setReason={setReason}
+              endDate={endDate} setEndDate={setEndDate}
+              dayLabel={weekdayNameEs(dayOfWeek(date))}
               court={court} startH={startH} endH={endH} setEndH={setEndH} priceStr={priceStr} slotHours={slotHours}
             />
           )}
-          {mutation.isError && (
-            <p className="text-body-sm text-red-600 mt-3">{getApiErrorMessage(mutation.error)}</p>
+          {step === 3 && type === 'fixed' && recurringPreview && (
+            <RecurringPreviewPanel preview={recurringPreview} />
+          )}
+          {step === 3 && type === 'block' && blockImpact && (
+            <BlockImpactPanel affected={blockImpact} />
+          )}
+          {activeMutation.isError && (
+            <p className="text-body-sm text-red-600 mt-3">{getApiErrorMessage(activeMutation.error)}</p>
           )}
         </div>
 
         {/* Footer */}
         <div className="flex-none px-[22px] pt-3.5 pb-4 border-t border-ink-100 flex justify-between items-center bg-white">
-          <Button variant="ghost" onClick={() => (step === 2 && !hasPrefill ? setStep(1) : onClose())}>
-            {step === 2 && !hasPrefill ? '← Atrás' : 'Cancelar'}
+          <Button variant="ghost" onClick={goBack}>
+            {step > 1 && !(step === 2 && hasPrefill) ? '← Atrás' : 'Cancelar'}
           </Button>
           {step === 1 ? (
             <Button disabled={!step1Ok} onClick={() => setStep(2)} data-testid="new-booking-continue">Continuar →</Button>
+          ) : step === 2 ? (
+            <Button
+              disabled={!step2Ok || activeMutation.isPending}
+              onClick={handleContinueFromStep2}
+              data-testid="new-booking-confirm"
+            >
+              {activeMutation.isPending
+                ? (type === 'booking' ? 'Guardando…' : 'Revisando…')
+                : (type === 'booking' ? 'Confirmar reserva' : 'Continuar →')}
+            </Button>
           ) : (
-            <Button disabled={!step2Ok || mutation.isPending} onClick={handleSave} data-testid="new-booking-confirm">
-              {mutation.isPending ? 'Guardando…' : type === 'block' ? 'Confirmar bloqueo' : 'Confirmar reserva'}
+            <Button
+              disabled={activeMutation.isPending}
+              onClick={handleConfirm}
+              data-testid="new-booking-final-confirm"
+            >
+              {activeMutation.isPending ? 'Guardando…' : confirmLabel}
             </Button>
           )}
         </div>
