@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useAdminStore } from '@/features/admin/store/adminStore'
 import type { User } from '@/shared/types/domain'
 
 interface AuthState {
@@ -19,6 +20,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: () => {
     localStorage.removeItem('auth_token')
+    // El id del complejo queda en localStorage: en una máquina compartida no
+    // debe sobrevivir a la sesión que lo generó.
+    useAdminStore.getState().clearActiveBusinessId()
     set({ user: null, token: null })
   },
 }))

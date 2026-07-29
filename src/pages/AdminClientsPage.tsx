@@ -2,83 +2,14 @@ import { useCallback, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Search, X, Phone, Mail, CalendarCheck, Clock, ChevronDown, ChevronUp } from 'lucide-react'
 import { AdminShell } from '@/features/admin/components/AdminShell'
+import { MobileClientsScreen } from '@/features/admin/components/mobile/MobileClientsScreen'
 import { useBookings } from '@/features/bookings/hooks/useBookings'
-import { addDaysISO, formatMoneyARS, relativeDayLabel, todayISO } from '@/shared/utils/date'
-import type { Booking } from '@/shared/types/domain'
-
-interface Client {
-  key: string
-  name: string
-  phone: string
-  email: string
-  total: number
-  cancelled: number
-  lastDate: string
-  nextDate: string | null
-  sport: string
-  totalSpent: number
-  history: { court: string; date: string; st: 'booked' | 'cancelled' }[]
-}
-
-const SPORT_COLORS: Record<string, string> = {
-  futbol5: 'var(--green-500)',
-  padel: 'var(--blue-500)',
-  tenis: 'var(--amber-500)',
-  basquet: '#e05e3d',
-}
-
-function sportColor(sport: string): string {
-  const key = sport.toLowerCase().replace(/[^a-z0-9]/g, '')
-  return SPORT_COLORS[key] ?? 'var(--green-500)'
-}
-
-function initials(name: string) {
-  return name.split(' ').slice(0, 2).map((w) => w[0] ?? '').join('').toUpperCase()
-}
-
-function buildClients(bookings: Booking[]): Client[] {
-  const groups = new Map<string, Booking[]>()
-  for (const b of bookings) {
-    const key = b.userId ?? b.guestPhone ?? b.guestEmail ?? b.guestName ?? b.id
-    const arr = groups.get(key)
-    if (arr) arr.push(b)
-    else groups.set(key, [b])
-  }
-
-  const today = todayISO()
-
-  return [...groups.entries()].map(([key, list]) => {
-    const sorted = [...list].sort((a, b) => (a.date + a.startTime < b.date + b.startTime ? 1 : -1))
-    const latest = sorted[0]!
-    const upcoming = list
-      .filter((b) => b.status === 'ACTIVE' && b.date >= today)
-      .sort((a, b) => (a.date + a.startTime < b.date + b.startTime ? -1 : 1))[0]
-    const sportCounts = new Map<string, number>()
-    for (const b of list) {
-      const s = b.court?.sportType ?? 'otro'
-      sportCounts.set(s, (sportCounts.get(s) ?? 0) + 1)
-    }
-    const topSport = [...sportCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—'
-
-    return {
-      key,
-      name: latest.guestName ?? latest.user?.name ?? 'Jugador',
-      phone: latest.guestPhone ?? '—',
-      email: latest.guestEmail ?? latest.user?.email ?? '—',
-      total: list.length,
-      cancelled: list.filter((b) => b.status === 'CANCELLED').length,
-      lastDate: relativeDayLabel(latest.date),
-      nextDate: upcoming ? `${relativeDayLabel(upcoming.date)} ${upcoming.startTime.slice(0, 5)}` : null,
-      sport: topSport,
-      totalSpent: list.filter((b) => b.status === 'ACTIVE').reduce((acc, b) => acc + (b.totalPrice ?? 0), 0),
-      history: sorted.slice(0, 5).map((b) => ({
-        court: b.court?.name ?? 'Cancha',
-        date: `${relativeDayLabel(b.date)} ${b.startTime.slice(0, 5)}`,
-        st: b.status === 'CANCELLED' ? 'cancelled' as const : 'booked' as const,
-      })),
-    }
-  })
-}
+import { useIsMobile } from '@/shared/hooks/useMediaQuery'
+import { addDaysISO, formatMoneyARS, todayISO } from '@/shared/utils/date'
+import { initials } from '@/features/admin/components/reservationTypes'
+import {
+  buildClients, sportColor, CLIENT_HISTORY_DAYS, type Client,
+} from '@/features/admin/components/clientTypes'
 
 function DetailPanel({ client, onClose }: { client: Client; onClose: () => void }) {
   const color = sportColor(client.sport)
@@ -157,12 +88,9 @@ function DetailPanel({ client, onClose }: { client: Client; onClose: () => void 
 
 type SortKey = 'name' | 'total' | 'cancelled' | 'totalSpent'
 
-// Ventana de historial del listado de jugadores. Sin dateTo: las reservas
-// futuras hacen falta para la columna "próxima".
-const CLIENT_HISTORY_DAYS = 180
-
 export default function AdminClientsPage() {
   const { businessId } = useParams<{ businessId: string }>()
+  const isMobile = useIsMobile()
   const { data: bookings, isLoading, isError } = useBookings(businessId, {
     dateFrom: addDaysISO(todayISO(), -CLIENT_HISTORY_DAYS),
   })
@@ -213,6 +141,14 @@ export default function AdminClientsPage() {
   }
 
   const COLS = '2fr 1.5fr 90px 80px 90px 100px 110px'
+
+  if (isMobile) {
+    return (
+      <AdminShell title="Clientes">
+        <MobileClientsScreen />
+      </AdminShell>
+    )
+  }
 
   return (
     <AdminShell

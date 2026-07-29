@@ -52,7 +52,7 @@ export function CourtFormPanel({ court, defaultSlotDuration, defaultPricePerSlot
   const upd = <K extends keyof CourtFormValues>(k: K, v: CourtFormValues[K]) => setForm((f) => ({ ...f, [k]: v }))
 
   return (
-    <div className="w-[340px] flex-none h-full flex flex-col bg-white border-l border-ink-100">
+    <div className="w-full md:w-[340px] flex-none h-full flex flex-col bg-white md:border-l md:border-ink-100">
       <div className="flex-none px-[18px] pt-4 pb-3 border-b border-ink-100 flex items-center justify-between">
         <h3 className="font-display font-bold text-h4 text-ink-900">
           {isNew ? 'Nueva cancha' : `Editar · ${court.name}`}

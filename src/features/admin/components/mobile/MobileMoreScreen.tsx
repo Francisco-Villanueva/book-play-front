@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   CalendarRange, ChevronRight, Clock, CreditCard, LayoutGrid, LogOut, Repeat,
-  Settings, User, UserPlus, Users,
+  Settings, Ticket, User, UserPlus, Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Avatar } from '@/shared/components/Avatar'
@@ -29,7 +29,7 @@ const GROUPS: MoreGroup[] = [
     items: [
       { key: 'canchas', icon: LayoutGrid, label: 'Canchas', path: '/courts', minRole: 'ADMIN' },
       { key: 'clientes', icon: Users, label: 'Clientes', path: '/clients' },
-      { key: 'horarios', icon: Clock, label: 'Horarios y excepciones', path: '/schedule', minRole: 'ADMIN' },
+      { key: 'horarios', icon: Clock, label: 'Horarios y excepciones', path: '/horarios', minRole: 'ADMIN' },
       { key: 'semanal', icon: CalendarRange, label: 'Vista semanal', path: '/schedule' },
     ],
   },
@@ -37,8 +37,8 @@ const GROUPS: MoreGroup[] = [
     label: 'Negocio',
     items: [
       { key: 'config', icon: Settings, label: 'Configuración del complejo', path: '/settings', minRole: 'OWNER' },
-      { key: 'equipo', icon: UserPlus, label: 'Equipo y usuarios', path: '/settings', minRole: 'ADMIN' },
-      { key: 'facturacion', icon: CreditCard, label: 'Plan y facturación', path: '/upgrade', minRole: 'OWNER' },
+      { key: 'equipo', icon: UserPlus, label: 'Equipo y usuarios', path: '/equipo', minRole: 'ADMIN' },
+      { key: 'facturacion', icon: CreditCard, label: 'Plan y facturación', path: '/facturacion', minRole: 'OWNER' },
     ],
   },
   {
@@ -46,6 +46,7 @@ const GROUPS: MoreGroup[] = [
     items: [
       { key: 'perfil', icon: User, label: 'Mi perfil', path: '/perfil' },
       { key: 'cambiar', icon: Repeat, label: 'Cambiar de complejo' },
+      { key: 'jugador', icon: Ticket, label: 'Reservar en otro complejo' },
     ],
   },
 ]
@@ -68,6 +69,10 @@ export function MobileMoreScreen() {
   const go = (item: MoreItem) => {
     if (item.key === 'cambiar') {
       setPickerOpen(true)
+      return
+    }
+    if (item.key === 'jugador') {
+      navigate('/dashboard')
       return
     }
     navigate(base + item.path)

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { SearchX, Home, type LucideIcon } from 'lucide-react'
 import { Button } from '@/shared/components/Button'
+import { useHomePath } from '@/features/auth/hooks/useAppContext'
 
 function IconRings({ icon: Icon, iconColor, bgClass, ringClass }: { icon: LucideIcon; iconColor: string; bgClass: string; ringClass: string }) {
   return (
@@ -16,6 +17,7 @@ function IconRings({ icon: Icon, iconColor, bgClass, ringClass }: { icon: Lucide
 
 export default function NotFoundPage() {
   const navigate = useNavigate()
+  const homePath = useHomePath()
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-ink-25 px-6 py-10 text-center">
       <IconRings icon={SearchX} iconColor="text-blue-600" bgClass="bg-blue-50" ringClass="bg-blue-200" />
@@ -26,7 +28,7 @@ export default function NotFoundPage() {
       <p className="mb-8 max-w-[380px] text-[15px] leading-[1.65] text-ink-500">
         El enlace puede estar roto o la página fue movida. Revisá la URL o volvé al inicio.
       </p>
-      <Button leftIcon={<Home size={15} aria-hidden />} onClick={() => navigate('/dashboard')}>
+      <Button leftIcon={<Home size={15} aria-hidden />} onClick={() => navigate(homePath)}>
         Ir al inicio
       </Button>
     </div>

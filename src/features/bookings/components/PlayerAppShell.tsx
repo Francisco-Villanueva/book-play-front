@@ -1,9 +1,10 @@
 import { type ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { CalendarDays, Ticket, User, LogOut } from 'lucide-react'
+import { CalendarDays, Ticket, User, LogOut, Building2 } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 import { Avatar } from '@/shared/components/Avatar'
 import { useAuthStore } from '@/features/auth/store/authStore'
+import { useCurrentBusiness } from '@/features/auth/hooks/useAppContext'
 
 const NAV = [
   { key: '/dashboard', icon: CalendarDays, label: 'Reservar' },
@@ -19,6 +20,7 @@ export function PlayerAppShell({ children }: PlayerAppShellProps) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const { user, logout } = useAuthStore()
+  const business = useCurrentBusiness()
 
   const handleLogout = () => {
     logout()
@@ -55,6 +57,27 @@ export function PlayerAppShell({ children }: PlayerAppShellProps) {
             )
           })}
         </nav>
+
+        {/* Sin esto, quien administra un complejo queda encerrado en la app de
+            jugador: las rutas del panel no se alcanzan desde ninguna pantalla. */}
+        {business && (
+          <div className="px-3.5 pb-2">
+            <button
+              type="button"
+              onClick={() => navigate(`/admin/${business.id}`)}
+              data-testid="player-shell-back-to-business"
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-md border border-ink-100 bg-ink-50 hover:bg-ink-100 cursor-pointer text-left transition-colors duration-[120ms]"
+            >
+              <span className="w-7 h-7 rounded-sm bg-white flex items-center justify-center text-green-600 flex-none">
+                <Building2 size={16} aria-hidden />
+              </span>
+              <span className="flex-1 min-w-0">
+                <span className="block text-[11px] text-ink-500">Volver a</span>
+                <span className="block text-caption font-bold text-ink-900 truncate">{business.name}</span>
+              </span>
+            </button>
+          </div>
+        )}
 
         <div className="p-3.5 border-t border-ink-100 flex items-center gap-2.5">
           <Avatar name={user?.name ?? 'Jugador'} size="sm" />
