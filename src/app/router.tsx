@@ -20,6 +20,9 @@ import AdminClientsPage from '@/pages/AdminClientsPage'
 import AdminSettingsPage from '@/pages/AdminSettingsPage'
 import AdminMorePage from '@/pages/AdminMorePage'
 import AdminProfilePage from '@/pages/AdminProfilePage'
+import AdminScheduleRulesPage from '@/pages/AdminScheduleRulesPage'
+import AdminTeamPage from '@/pages/AdminTeamPage'
+import AdminBillingPage from '@/pages/AdminBillingPage'
 import PublicBookingPage from '@/pages/PublicBookingPage'
 import AcceptInvitationPage from '@/pages/AcceptInvitationPage'
 import GuestBookingCancelPage from '@/pages/GuestBookingCancelPage'
@@ -90,6 +93,9 @@ export const router = createBrowserRouter([
           { path: '/admin/:businessId/settings',           element: <AdminSettingsPage /> },
           { path: '/admin/:businessId/mas',                element: <AdminMorePage /> },
           { path: '/admin/:businessId/perfil',             element: <AdminProfilePage /> },
+          { path: '/admin/:businessId/horarios',           element: <AdminScheduleRulesPage /> },
+          { path: '/admin/:businessId/equipo',             element: <AdminTeamPage /> },
+          { path: '/admin/:businessId/facturacion',        element: <AdminBillingPage /> },
           { path: '/admin/:businessId/upgrade',            element: <PricingPage /> },
           { path: '/admin/:businessId/upgrade/confirm',    element: <UpgradeConfirmationPage /> },
           { path: '/admin/:businessId/suspended',          element: <ConversionWallPage /> },

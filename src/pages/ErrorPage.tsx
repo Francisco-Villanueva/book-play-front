@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, RefreshCw, ArrowLeft, type LucideIcon } from 'lucide-react'
 import { Button } from '@/shared/components/Button'
+import { useHomePath } from '@/features/auth/hooks/useAppContext'
 
 function IconRings({ icon: Icon, iconColor, bgClass, ringClass }: { icon: LucideIcon; iconColor: string; bgClass: string; ringClass: string }) {
   return (
@@ -16,6 +17,7 @@ function IconRings({ icon: Icon, iconColor, bgClass, ringClass }: { icon: Lucide
 
 export default function ErrorPage() {
   const navigate = useNavigate()
+  const homePath = useHomePath()
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-ink-25 px-6 py-10 text-center">
       <IconRings icon={AlertTriangle} iconColor="text-red-600" bgClass="bg-red-50" ringClass="bg-red-100" />
@@ -30,7 +32,7 @@ export default function ErrorPage() {
         <Button variant="outline" leftIcon={<RefreshCw size={15} aria-hidden />} onClick={() => window.location.reload()}>
           Reintentar
         </Button>
-        <Button leftIcon={<ArrowLeft size={15} aria-hidden />} onClick={() => navigate('/dashboard')}>
+        <Button leftIcon={<ArrowLeft size={15} aria-hidden />} onClick={() => navigate(homePath)}>
           Volver al inicio
         </Button>
       </div>

@@ -6,6 +6,7 @@ import { AppHeader } from '@/features/bookings/components/AppHeader'
 import { Switch } from '@/shared/components/Switch'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useMyBookings } from '@/features/bookings/hooks/useBookings'
+import { useCurrentBusiness } from '@/features/auth/hooks/useAppContext'
 import { ProfileIdentityCard } from '@/features/users/components/ProfileIdentityCard'
 import { cn } from '@/shared/utils/cn'
 import { todayISO } from '@/shared/utils/date'
@@ -29,6 +30,7 @@ export default function ProfilePage() {
   const navigate = useNavigate()
   const [notif, setNotif] = useState(true)
   const [recurring, setRecurring] = useState(false)
+  const business = useCurrentBusiness()
   const hasBusiness = (user?.businesses?.length ?? 0) > 0
   const { data: bookings } = useMyBookings()
 
@@ -90,6 +92,24 @@ export default function ProfilePage() {
             </button>
           ))}
         </div>
+
+        {business && (
+          <button
+            type="button"
+            onClick={() => navigate(`/admin/${business.id}`)}
+            data-testid="profile-back-to-business"
+            className="w-full flex items-center gap-3 px-4 py-3.5 mt-4 bg-green-50 border border-green-100 rounded-lg cursor-pointer text-left"
+          >
+            <span className="w-[34px] h-[34px] rounded-sm bg-white flex items-center justify-center text-green-600 flex-none">
+              <Building2 size={18} aria-hidden />
+            </span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-body-sm font-bold text-green-700 truncate">Ir a {business.name}</span>
+              <span className="block text-caption text-green-600">Administrar mi complejo</span>
+            </span>
+            <ChevronRight size={16} className="text-green-400 flex-none" aria-hidden />
+          </button>
+        )}
 
         {!hasBusiness && (
           <button

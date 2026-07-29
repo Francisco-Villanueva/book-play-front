@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Clock, Trash2, Plus, CheckCircle, Building2, CalendarOff, CreditCard, Users } from 'lucide-react'
+import { Clock, Trash2, Plus, Building2, CalendarOff, CreditCard, Users } from 'lucide-react'
 import { AdminShell } from '@/features/admin/components/AdminShell'
 import { Button } from '@/shared/components/Button'
-import { PhoneInput } from '@/shared/components/PhoneInput'
 import { cn } from '@/shared/utils/cn'
 import { BillingSettingsPanel } from '@/features/billing/components/BillingSettingsPanel'
 import { TeamPanel } from '@/features/members/components/TeamPanel'
-import { useBusiness, useUpdateBusiness } from '@/features/businesses/hooks/useBusinesses'
+import { useBusiness } from '@/features/businesses/hooks/useBusinesses'
 import { useCourts } from '@/features/courts/hooks/useCourts'
 import {
   useAvailabilityRules, useCreateAvailabilityRulesBatch, useDeleteAvailabilityRule,
@@ -16,18 +15,14 @@ import {
   useExceptionRules, useCreateExceptionRule, useDeleteExceptionRule,
 } from '@/features/exception-rules/hooks/useExceptionRules'
 import { getApiErrorMessage } from '@/shared/utils/apiError'
-import type { AvailabilityRule, ExceptionRule } from '@/shared/types/domain'
+import { groupRules, type RuleGroup } from '@/features/availability-rules/utils/groupRules'
+import { BusinessGeneralForm } from '@/features/businesses/components/BusinessGeneralForm'
+import { MobileBusinessSettingsScreen } from '@/features/admin/components/mobile/MobileBusinessSettingsScreen'
+import { useIsMobile } from '@/shared/hooks/useMediaQuery'
+import type { ExceptionRule } from '@/shared/types/domain'
 
 const CFG_DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 const CFG_HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`)
-const TIMEZONES = [
-  { value: 'America/Argentina/Buenos_Aires', label: 'Buenos Aires' },
-  { value: 'America/Montevideo', label: 'Montevideo' },
-  { value: 'America/Santiago', label: 'Santiago' },
-  { value: 'America/Lima', label: 'Lima' },
-  { value: 'America/Bogota', label: 'Bogotá' },
-]
-
 const cfgFld: React.CSSProperties = {
   width: '100%', padding: '9px 12px', borderRadius: 'var(--r-md)',
   border: '1.5px solid var(--border-default)', background: 'var(--surface-card)',
@@ -36,136 +31,7 @@ const cfgFld: React.CSSProperties = {
 }
 const cfgLbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 5 }
 
-// ── Tab 1: General ─────────────────────────────────────────────────
-function GeneralTab({ businessId }: { businessId: string }) {
-  const { data: business, isLoading } = useBusiness(businessId)
-  const updateBusiness = useUpdateBusiness(businessId)
-  const [form, setForm] = useState({ name: '', address: '', phone: '', email: '', defaultSlotDuration: 60, defaultPricePerSlot: '', timezone: TIMEZONES[0]!.value })
-  const [saved, setSaved] = useState(false)
-
-  useEffect(() => {
-    if (business) {
-      setForm({
-        name: business.name,
-        address: business.address ?? '',
-        phone: business.phone ?? '',
-        email: business.email ?? '',
-        defaultSlotDuration: business.defaultSlotDuration,
-        defaultPricePerSlot: business.defaultPricePerSlot != null ? String(business.defaultPricePerSlot) : '',
-        timezone: business.timezone,
-      })
-    }
-  }, [business])
-
-  const upd = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }))
-
-  const save = () => {
-    const { defaultPricePerSlot, ...rest } = form
-    updateBusiness.mutate(
-      {
-        ...rest,
-        ...(defaultPricePerSlot.trim() ? { defaultPricePerSlot: Number(defaultPricePerSlot) } : {}),
-      },
-      { onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2200) } },
-    )
-  }
-
-  if (isLoading) return <p className="text-body-sm text-ink-400">Cargando…</p>
-
-  return (
-    <div style={{ maxWidth: 580 }}>
-      <div style={{ marginBottom: 28 }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 14px', paddingBottom: 8, borderBottom: '1px solid var(--border-subtle)' }}>Datos del complejo</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div>
-            <label style={cfgLbl}>Nombre del complejo *</label>
-            <input style={cfgFld} value={form.name} onChange={(e) => upd('name', e.target.value)} aria-label="Nombre del complejo" />
-          </div>
-          <div>
-            <label style={cfgLbl}>Dirección</label>
-            <input style={cfgFld} value={form.address} onChange={(e) => upd('address', e.target.value)} aria-label="Dirección" />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <PhoneInput label="Teléfono" value={form.phone} onChange={(v) => upd('phone', v)} />
-            <div>
-              <label style={cfgLbl}>Email</label>
-              <input type="email" style={cfgFld} value={form.email} onChange={(e) => upd('email', e.target.value)} aria-label="Email" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ marginBottom: 28 }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 14px', paddingBottom: 8, borderBottom: '1px solid var(--border-subtle)' }}>Valores por defecto de las canchas</h3>
-        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '-6px 0 14px' }}>
-          Se aplican a las canchas nuevas. Cada cancha puede tener su propia duración y precio.
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          <div>
-            <label style={cfgLbl}>Duración del turno</label>
-            <select style={cfgFld} value={form.defaultSlotDuration} onChange={(e) => upd('defaultSlotDuration', Number(e.target.value))}>
-              {[30, 60, 90, 120].map((d) => <option key={d} value={d}>{d} minutos</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={cfgLbl}>Precio por turno ($)</label>
-            <input
-              type="number"
-              min={0}
-              step={500}
-              style={cfgFld}
-              value={form.defaultPricePerSlot}
-              onChange={(e) => upd('defaultPricePerSlot', e.target.value)}
-              aria-label="Precio por turno por defecto"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div style={{ marginBottom: 28 }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--text-strong)', margin: '0 0 14px', paddingBottom: 8, borderBottom: '1px solid var(--border-subtle)' }}>Zona horaria</h3>
-        <div style={{ maxWidth: 283 }}>
-          <select style={cfgFld} value={form.timezone} onChange={(e) => upd('timezone', e.target.value)} aria-label="Zona horaria">
-            {TIMEZONES.map((z) => <option key={z.value} value={z.value}>{z.label}</option>)}
-          </select>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <Button onClick={save} disabled={updateBusiness.isPending || !form.name.trim()}>
-          {updateBusiness.isPending ? 'Guardando…' : 'Guardar cambios'}
-        </Button>
-        {saved && (
-          <span style={{ fontSize: 13, color: 'var(--green-700)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
-            <CheckCircle size={15} color="var(--green-600)" aria-hidden /> Guardado
-          </span>
-        )}
-        {updateBusiness.isError && (
-          <span style={{ fontSize: 13, color: '#B91C1C' }}>{getApiErrorMessage(updateBusiness.error)}</span>
-        )}
-      </div>
-    </div>
-  )
-}
-
 // ── Tab 2: Schedule rules ──────────────────────────────────────────
-interface RuleGroup { key: string; ruleIds: string[]; days: number[]; from: string; to: string }
-
-function groupRules(rules: AvailabilityRule[]): RuleGroup[] {
-  const map = new Map<string, RuleGroup>()
-  for (const r of rules) {
-    const key = `${r.startTime.slice(0, 5)}-${r.endTime.slice(0, 5)}`
-    const existing = map.get(key)
-    if (existing) {
-      existing.ruleIds.push(r.id)
-      existing.days.push(r.dayOfWeek)
-    } else {
-      map.set(key, { key, ruleIds: [r.id], days: [r.dayOfWeek], from: r.startTime.slice(0, 5), to: r.endTime.slice(0, 5) })
-    }
-  }
-  return [...map.values()]
-}
-
 function SchedulePreview({ groups }: { groups: RuleGroup[] }) {
   const openAt = (day: number, h: number) =>
     groups.some((g) => g.days.includes(day) && h >= parseInt(g.from) && h < parseInt(g.to))
@@ -563,10 +429,21 @@ const TABS = [
 
 export default function AdminSettingsPage() {
   const { businessId } = useParams<{ businessId: string }>()
+  const isMobile = useIsMobile()
   const { data: business } = useBusiness(businessId)
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]['key']>('general')
 
   if (!businessId) return null
+
+  // En mobile las cinco pestañas no entran: cada una es su propia entrada del
+  // menú Más, y esta ruta queda con los datos del complejo.
+  if (isMobile) {
+    return (
+      <AdminShell title="Configuración del complejo">
+        <MobileBusinessSettingsScreen />
+      </AdminShell>
+    )
+  }
 
   return (
     <AdminShell title="Configuración" subtitle={business?.name ?? ''}>
@@ -590,7 +467,7 @@ export default function AdminSettingsPage() {
           ))}
         </div>
         <div className="flex-1 overflow-y-auto p-7">
-          {activeTab === 'general'     && <GeneralTab businessId={businessId} />}
+          {activeTab === 'general'     && <BusinessGeneralForm businessId={businessId} />}
           {activeTab === 'horarios'    && <ScheduleTab businessId={businessId} />}
           {activeTab === 'excepciones' && <ExceptionsTab businessId={businessId} />}
           {activeTab === 'equipo'      && <TeamPanel businessId={businessId} />}

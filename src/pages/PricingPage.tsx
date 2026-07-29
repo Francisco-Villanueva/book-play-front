@@ -1,24 +1,35 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { Zap } from 'lucide-react'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { ChevronLeft, Zap } from 'lucide-react'
 import { PlanCard } from '@/shared/components/PlanCard'
 import { PaymentFormPanel } from '@/features/billing/components/PaymentFormPanel'
 import { PlanComparisonTable } from '@/features/billing/components/PlanComparisonTable'
 import { FaqAccordion } from '@/features/billing/components/FaqAccordion'
 import { usePublicPlans } from '@/features/plans/hooks/usePlans'
+import { useHomePath } from '@/features/auth/hooks/useAppContext'
 import type { Plan } from '@/shared/types/domain'
 
 type Screen = 'pricing' | 'payment'
 
 export default function PricingPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { businessId } = useParams<{ businessId: string }>()
   const { data: plans, isLoading } = usePublicPlans()
+  const homePath = useHomePath()
   const [screen, setScreen] = useState<Screen>('pricing')
   const [selected, setSelected] = useState<Plan | null>(null)
 
   const handleContinue = () => {
-    navigate(businessId ? `/admin/${businessId}` : '/dashboard')
+    navigate(businessId ? `/admin/${businessId}` : homePath)
+  }
+
+  // Elegir un plan no puede ser la única salida: quien entra a mirar precios
+  // tiene que poder volver a donde estaba. Con `key === 'default'` la pantalla
+  // es la primera del historial (link directo) y no hay atrás al que volver.
+  const goBack = () => {
+    if (location.key === 'default') handleContinue()
+    else navigate(-1)
   }
 
   if (screen === 'payment' && selected && businessId) {
@@ -31,8 +42,24 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen overflow-y-auto bg-ink-25">
+      <header
+        className="sticky top-0 z-10 flex items-center gap-1.5 h-14 px-2 bg-white/95 backdrop-blur border-b border-ink-100"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
+        <button
+          type="button"
+          onClick={goBack}
+          aria-label="Volver"
+          data-testid="pricing-back"
+          className="w-11 h-11 flex-none rounded-full border-none bg-transparent cursor-pointer flex items-center justify-center text-ink-700"
+        >
+          <ChevronLeft size={24} aria-hidden />
+        </button>
+        <p className="flex-1 font-display font-bold text-[17px] text-ink-900 truncate">Planes</p>
+      </header>
+
       {/* Hero */}
-      <div className="text-center px-6 pt-12 pb-8 bg-[linear-gradient(160deg,var(--green-50)_0%,var(--surface-page)_60%)]">
+      <div className="text-center px-6 pt-10 pb-8 bg-[linear-gradient(160deg,var(--green-50)_0%,var(--surface-page)_60%)]">
         <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-green-50 border border-green-200 mb-4">
           <Zap size={13} className="text-green-700" aria-hidden />
           <span className="text-[12px] font-bold text-green-700">Planes de suscripción</span>
@@ -50,9 +77,10 @@ export default function PricingPage() {
       {plans && plans.length > 0 && (
         <>
           {/* Plan cards */}
+          {/* Apiladas en mobile: N columnas fijas dejan cada plan ilegible. */}
           <div
-            className="max-w-[920px] mx-auto px-6 pb-10 grid gap-[18px]"
-            style={{ gridTemplateColumns: `repeat(${plans.length}, 1fr)` }}
+            className="max-w-[920px] mx-auto px-6 pb-10 grid gap-[18px] grid-cols-1 md:[grid-template-columns:var(--plan-cols)]"
+            style={{ '--plan-cols': `repeat(${plans.length}, minmax(0, 1fr))` } as React.CSSProperties}
           >
             {plans.map((plan) => (
               <PlanCard

@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { AdminShell } from '@/features/admin/components/AdminShell'
+import { MobileWeekScreen } from '@/features/admin/components/mobile/MobileWeekScreen'
+import { useIsMobile } from '@/shared/hooks/useMediaQuery'
 import { cn } from '@/shared/utils/cn'
 import { useCourts } from '@/features/courts/hooks/useCourts'
 import { useBookings } from '@/features/bookings/hooks/useBookings'
@@ -60,6 +62,7 @@ function WeekCell({ slots, onDayClick }: { slots: boolean[]; onDayClick: () => v
 export default function AdminSchedulePage() {
   const { businessId } = useParams<{ businessId: string }>()
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const [filter, setFilter] = useState('Todas')
   const [weekOffset, setWeekOffset] = useState(0)
 
@@ -91,6 +94,14 @@ export default function AdminSchedulePage() {
   }
 
   const weekLabel = `${formatShortDay(weekStart).day} – ${formatShortDay(weekDays[6]!).day}`
+
+  if (isMobile) {
+    return (
+      <AdminShell title="Vista semanal">
+        <MobileWeekScreen />
+      </AdminShell>
+    )
+  }
 
   return (
     <AdminShell title="Vista semanal" subtitle={weekLabel}>

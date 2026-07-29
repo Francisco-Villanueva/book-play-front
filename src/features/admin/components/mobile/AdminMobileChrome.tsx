@@ -18,8 +18,13 @@ const TABS: { key: TabKey; icon: LucideIcon; label: string; path: string }[] = [
 
 function activeTab(pathname: string, base: string): TabKey {
   const section = pathname.slice(base.length)
-  // El perfil es una subpantalla de "Más": la pestaña tiene que seguir marcada.
-  if (section.startsWith('/mas') || section.startsWith('/perfil')) return 'mas'
+  // Todo lo que se alcanza desde "Más" es una subpantalla suya: la pestaña
+  // tiene que seguir marcada mientras el usuario está adentro.
+  const underMore = [
+    '/mas', '/perfil', '/horarios', '/courts', '/clients', '/schedule',
+    '/settings', '/equipo', '/facturacion', '/upgrade',
+  ]
+  if (underMore.some((p) => section.startsWith(p))) return 'mas'
   if (section.startsWith('/bookings')) return 'reservas'
   return 'agenda'
 }

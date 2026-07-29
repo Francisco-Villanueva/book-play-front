@@ -34,7 +34,10 @@ export function PlanComparisonTable({ plans }: PlanComparisonTableProps) {
   ]
 
   return (
-    <div className="bg-white rounded-xl border border-ink-100 overflow-hidden overflow-x-auto">
+    // El ancho mínimo es lo que hace que el contenedor scrollee en vez de
+    // comprimir las columnas `fr` hasta volverlas ilegibles en un celular.
+    <div className="bg-white rounded-xl border border-ink-100 overflow-x-auto">
+      <div style={{ minWidth: 140 + plans.length * 96 }}>
       <div
         className="grid border-b-2 border-ink-200 bg-ink-50"
         style={{ gridTemplateColumns: `2fr repeat(${plans.length}, 1fr)` }}
@@ -58,6 +61,7 @@ export function PlanComparisonTable({ plans }: PlanComparisonTableProps) {
           ))}
         </div>
       ))}
+      </div>
     </div>
   )
 }

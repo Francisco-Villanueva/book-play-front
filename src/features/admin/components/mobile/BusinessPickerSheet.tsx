@@ -1,5 +1,5 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { Check, Plus } from 'lucide-react'
+import { Check, Plus, Ticket } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 import { Avatar } from '@/shared/components/Avatar'
 import { useAuthStore } from '@/features/auth/store/authStore'
@@ -55,6 +55,24 @@ export function BusinessPickerSheet({ onClose }: BusinessPickerSheetProps) {
             </button>
           )
         })}
+
+        <button
+          type="button"
+          onClick={() => {
+            onClose()
+            navigate('/dashboard')
+          }}
+          data-testid="mobile-player-mode"
+          className="w-full flex items-center gap-3 px-3.5 py-3 rounded-md border border-ink-100 bg-white cursor-pointer text-left min-h-[52px]"
+        >
+          <span className="w-8 h-8 rounded-sm bg-green-50 flex items-center justify-center text-green-600 flex-none">
+            <Ticket size={16} aria-hidden />
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block font-semibold text-body-sm text-ink-700">Entrar como jugador</span>
+            <span className="block text-[12px] text-ink-500">Reservar en otro complejo</span>
+          </span>
+        </button>
 
         <button
           type="button"

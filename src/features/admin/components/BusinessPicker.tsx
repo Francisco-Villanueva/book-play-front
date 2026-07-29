@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Check, ChevronsUpDown, Plus } from 'lucide-react'
+import { Check, ChevronsUpDown, Plus, Ticket } from 'lucide-react'
 import { Avatar } from '@/shared/components/Avatar'
 import { cn } from '@/shared/utils/cn'
 import type { UserBusinessMembership } from '@/shared/types/domain'
@@ -61,10 +61,8 @@ export function BusinessPicker({ businessId, businesses }: BusinessPickerProps) 
 
   const boxClasses = 'flex items-center gap-2.5 px-3 py-2.5 bg-ink-50 border border-ink-100 rounded-md text-left'
 
-  if (businesses.length <= 1) {
-    return <div className={cn(boxClasses, 'mx-3.5 mb-3.5')}>{trigger}</div>
-  }
-
+  // Se despliega siempre, incluso con un solo complejo: es la única puerta de
+  // salida hacia la app de jugador desde el panel.
   return (
     <div ref={containerRef} className="relative mx-3.5 mb-3.5">
       <button
@@ -72,7 +70,7 @@ export function BusinessPicker({ businessId, businesses }: BusinessPickerProps) 
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label="Cambiar de complejo"
+        aria-label="Cambiar de complejo o entrar como jugador"
         data-testid="business-picker"
         className={cn(boxClasses, 'w-full cursor-pointer')}
       >
@@ -109,6 +107,24 @@ export function BusinessPicker({ businessId, businesses }: BusinessPickerProps) 
               </button>
             )
           })}
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false)
+              navigate('/dashboard')
+            }}
+            data-testid="business-picker-player-mode"
+            className="flex items-center gap-2.5 w-full px-3 py-2 border-t border-ink-100 bg-transparent hover:bg-ink-50 cursor-pointer text-left"
+          >
+            <span className="w-6 h-6 rounded-sm bg-green-50 flex items-center justify-center text-green-600 flex-none">
+              <Ticket size={13} aria-hidden />
+            </span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-caption font-semibold text-ink-700">Entrar como jugador</span>
+              <span className="block text-[11px] text-ink-500">Reservar en otro complejo</span>
+            </span>
+          </button>
+
           <button
             type="button"
             onClick={() => {

@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -63,8 +63,15 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { user, logout } = useAuthStore();
-  const { sidebarOpen } = useAdminStore();
+  const { sidebarOpen, setActiveBusinessId } = useAdminStore();
   const isMobile = useIsMobile();
+
+  // Corre también en mobile: el retorno anticipado a AdminMobileChrome está más
+  // abajo, así que este efecto cubre los dos shells.
+  useEffect(() => {
+    if (businessId) setActiveBusinessId(businessId);
+  }, [businessId, setActiveBusinessId]);
+
   const [expiryBannerDismissed, setExpiryBannerDismissed] = useState(false);
   const [newBookingOpen, setNewBookingOpen] = useState(false);
 

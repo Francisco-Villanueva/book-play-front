@@ -73,7 +73,7 @@ function InviteForm({ businessId, myRole, onDone }: { businessId: string; myRole
       <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-strong)', marginTop: 0, marginBottom: 12 }}>
         Invitar a alguien al equipo
       </p>
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10, alignItems: 'start' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-2.5 items-start">
         <Input
           label="Email"
           type="email"

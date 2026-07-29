@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { authApi } from '../api/authApi'
 import { usersApi } from '@/features/users/api/usersApi'
 import { useAuthStore } from '../store/authStore'
+import { useAdminStore } from '@/features/admin/store/adminStore'
+import { homePathFor } from './useAppContext'
 import type { User } from '@/shared/types/domain'
 import type {
   ForgotPasswordFormData,
@@ -13,9 +15,7 @@ import type {
 // A user can be PLAYER globally and still own/manage a business (BusinessUser role).
 // Business administration takes priority over the player app as the landing view.
 export function getPostLoginPath(user: User): string {
-  if (user.globalRole === 'MASTER') return '/master/businesses'
-  if (user.businesses && user.businesses.length > 0) return `/admin/${user.businesses[0]!.id}`
-  return '/dashboard'
+  return homePathFor(user, useAdminStore.getState().activeBusinessId)
 }
 
 // Sólo rutas internas: un ?next= absoluto convertiría el login en un redirect abierto.

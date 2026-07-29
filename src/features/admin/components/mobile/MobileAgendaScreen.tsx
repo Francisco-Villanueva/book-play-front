@@ -59,12 +59,19 @@ export function MobileAgendaScreen({ businessId }: MobileAgendaScreenProps) {
   const isToday = date === todayISO()
   const nowHour = isToday ? timeToHours(new Date().toTimeString().slice(0, 5)) : null
 
-  // El FAB del shell abre el alta desde cualquier pestaña.
+  // El FAB del shell abre el alta desde cualquier pestaña, y la vista semanal
+  // entra a un día puntual. Los dos llegan por query string.
   useEffect(() => {
-    if (searchParams.get('nueva') == null) return
-    setNewBooking({})
+    const wantsNew = searchParams.get('nueva') != null
+    const wantedDate = searchParams.get('fecha')
+    if (!wantsNew && !wantedDate) return
+
+    if (wantedDate) setDate(wantedDate)
+    if (wantsNew) setNewBooking({})
+
     const next = new URLSearchParams(searchParams)
     next.delete('nueva')
+    next.delete('fecha')
     setSearchParams(next, { replace: true })
   }, [searchParams, setSearchParams])
 

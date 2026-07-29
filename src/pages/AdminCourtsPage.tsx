@@ -3,7 +3,9 @@ import { useParams } from 'react-router-dom'
 import { Plus, Pencil, Home, Wind, Zap } from 'lucide-react'
 import { AdminShell } from '@/features/admin/components/AdminShell'
 import { CourtFormPanel, type CourtFormValues } from '@/features/admin/components/CourtFormPanel'
+import { MobileCourtsScreen } from '@/features/admin/components/mobile/MobileCourtsScreen'
 import { Button } from '@/shared/components/Button'
+import { useIsMobile } from '@/shared/hooks/useMediaQuery'
 import { cn } from '@/shared/utils/cn'
 import { useCourts, useCreateCourt, useUpdateCourt } from '@/features/courts/hooks/useCourts'
 import { useBusiness } from '@/features/businesses/hooks/useBusinesses'
@@ -79,6 +81,7 @@ function CourtRow({ court, onEdit, onToggle }: { court: Court; onEdit: (c: Court
 
 export default function AdminCourtsPage() {
   const { businessId } = useParams<{ businessId: string }>()
+  const isMobile = useIsMobile()
   const { data: courts, isLoading, isError } = useCourts(businessId)
   const { data: business } = useBusiness(businessId)
   const createCourt = useCreateCourt(businessId ?? '')
@@ -92,6 +95,14 @@ export default function AdminCourtsPage() {
 
   const list = courts ?? []
   const activeCount = list.filter((c) => c.isActive).length
+
+  if (isMobile) {
+    return (
+      <AdminShell title="Canchas">
+        <MobileCourtsScreen />
+      </AdminShell>
+    )
+  }
 
   return (
     <AdminShell title="Canchas" subtitle={`${activeCount} activas · ${list.length} total`}>
