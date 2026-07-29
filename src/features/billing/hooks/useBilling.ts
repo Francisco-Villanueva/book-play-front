@@ -54,6 +54,7 @@ export function usePayments(businessId: string | undefined, enabled = true) {
 export function useCreateCheckoutSession(businessId: string) {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { inlineError: true },
     mutationFn: (data: CreateCheckoutSessionPayload) => billingApi.createCheckoutSession(businessId, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: billingKeys.subscription(businessId) }),
   })
@@ -70,6 +71,7 @@ export function useCancelSubscription(businessId: string) {
 export function useReactivateSubscription(businessId: string) {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { inlineError: true },
     mutationFn: () => billingApi.reactivateSubscription(businessId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: billingKeys.subscription(businessId) }),
   })

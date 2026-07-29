@@ -61,6 +61,7 @@ function Step1({ onNext }: { onNext: (defaults: CourtDefaults) => void }) {
   const defaultSlotDuration = watch('defaultSlotDuration')
 
   const createBusiness = useMutation({
+    meta: { inlineError: true },
     mutationFn: (data: CreateBusinessFormData) =>
       businessesApi.create({
         name: data.name,
@@ -203,6 +204,7 @@ function Step2({
   const slotDuration = watch('slotDuration')
 
   const createCourt = useMutation({
+    meta: { inlineError: true },
     mutationFn: (data: CreateCourtFormData) => {
       const capacity = data.capacity ? Number(data.capacity) : undefined
       const pricePerSlot = data.pricePerSlot ? Number(data.pricePerSlot) : undefined
@@ -380,6 +382,7 @@ function Step3({
   }
 
   const createRules = useMutation({
+    meta: { inlineError: true },
     mutationFn: (data: AvailabilityWizardFormData) =>
       availabilityRulesApi.createBatch(businessId, {
         name: 'Horario de atención',

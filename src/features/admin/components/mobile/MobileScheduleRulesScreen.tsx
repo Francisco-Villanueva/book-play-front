@@ -8,8 +8,7 @@ import { formatDays, groupRules } from '@/features/availability-rules/utils/grou
 import { useDeleteExceptionRule, useExceptionRules } from '@/features/exception-rules/hooks/useExceptionRules'
 import { MobileSubScreen } from './MobileSubScreen'
 import { ConfirmDialog, type ConfirmRequest } from './ConfirmDialog'
-import { Toast } from './Toast'
-import { useToast } from './useToast'
+import { flashToast } from '@/shared/store/toastStore'
 
 type Tab = 'horarios' | 'excepciones'
 
@@ -17,7 +16,6 @@ export function MobileScheduleRulesScreen() {
   const { businessId } = useParams<{ businessId: string }>()
   const [tab, setTab] = useState<Tab>('horarios')
   const [confirm, setConfirm] = useState<ConfirmRequest | null>(null)
-  const { toast, flash, dismiss } = useToast()
 
   const { data: rules, isLoading: rulesLoading, isError: rulesError } = useAvailabilityRules(businessId)
   const { data: exceptions, isLoading: exLoading } = useExceptionRules(businessId)
@@ -40,11 +38,11 @@ export function MobileScheduleRulesScreen() {
         deleteException.mutate(id, {
           onSuccess: () => {
             setConfirm(null)
-            flash('Excepción eliminada')
+            flashToast('Excepción eliminada')
           },
           onError: () => {
             setConfirm(null)
-            flash('No pudimos eliminar la excepción', { kind: 'error' })
+            flashToast('No pudimos eliminar la excepción', { kind: 'error' })
           },
         }),
     })
@@ -174,7 +172,6 @@ export function MobileScheduleRulesScreen() {
         onClose={() => setConfirm(null)}
         pending={deleteException.isPending}
       />
-      <Toast toast={toast} onUndo={dismiss} />
     </>
   )
 }

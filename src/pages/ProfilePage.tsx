@@ -1,6 +1,5 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, ChevronRight, Bell, Repeat, Shield, HelpCircle, Building2 } from 'lucide-react'
+import { LogOut, ChevronRight, Bell, Building2 } from 'lucide-react'
 import { PlayerAppShell } from '@/features/bookings/components/PlayerAppShell'
 import { AppHeader } from '@/features/bookings/components/AppHeader'
 import { Switch } from '@/shared/components/Switch'
@@ -8,13 +7,8 @@ import { useAuthStore } from '@/features/auth/store/authStore'
 import { useMyBookings } from '@/features/bookings/hooks/useBookings'
 import { useCurrentBusiness } from '@/features/auth/hooks/useAppContext'
 import { ProfileIdentityCard } from '@/features/users/components/ProfileIdentityCard'
-import { cn } from '@/shared/utils/cn'
+import { usePreferences, useUpdatePreferences } from '@/features/users/hooks/useUsers'
 import { todayISO } from '@/shared/utils/date'
-
-const MENU = [
-  { icon: Shield, label: 'Privacidad' },
-  { icon: HelpCircle, label: 'Ayuda y soporte' },
-]
 
 function Stat({ n, l }: { n: string; l: string }) {
   return (
@@ -28,8 +22,8 @@ function Stat({ n, l }: { n: string; l: string }) {
 export default function ProfilePage() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
-  const [notif, setNotif] = useState(true)
-  const [recurring, setRecurring] = useState(false)
+  const { data: preferences, isLoading: preferencesLoading } = usePreferences()
+  const updatePreferences = useUpdatePreferences()
   const business = useCurrentBusiness()
   const hasBusiness = (user?.businesses?.length ?? 0) > 0
   const { data: bookings } = useMyBookings()
@@ -64,33 +58,20 @@ export default function ProfilePage() {
             <span className="w-[34px] h-[34px] rounded-sm bg-ink-50 flex items-center justify-center text-ink-700 flex-none">
               <Bell size={18} aria-hidden />
             </span>
-            <span className="flex-1 text-body-sm font-semibold text-ink-900">Avisos de turnos</span>
-            <Switch checked={notif} onChange={(e) => setNotif(e.target.checked)} aria-label="Avisos de turnos" />
-          </div>
-          <div className="flex items-center gap-3 px-4 py-3.5 border-t border-ink-100">
-            <span className="w-[34px] h-[34px] rounded-sm bg-ink-50 flex items-center justify-center text-ink-700 flex-none">
-              <Repeat size={18} aria-hidden />
+            <span className="flex-1 min-w-0">
+              <span className="block text-body-sm font-semibold text-ink-900">Avisos de turnos</span>
+              <span className="block text-caption text-ink-500">
+                Correos al reservar y al cancelar
+              </span>
             </span>
-            <span className="flex-1 text-body-sm font-semibold text-ink-900">Turno fijo semanal</span>
-            <Switch checked={recurring} onChange={(e) => setRecurring(e.target.checked)} aria-label="Turno fijo semanal" />
+            <Switch
+              checked={preferences?.notifyBookings ?? true}
+              disabled={preferencesLoading || updatePreferences.isPending}
+              onChange={(e) => updatePreferences.mutate({ notifyBookings: e.target.checked })}
+              aria-label="Avisos de turnos"
+              data-testid="profile-notify-bookings"
+            />
           </div>
-        </div>
-
-        <div className="bg-white border border-ink-100 rounded-lg shadow-sm overflow-hidden mt-4">
-          {MENU.map(({ icon: Icon, label }, i) => (
-            <button
-              key={label}
-              type="button"
-              className={cn(
-                'w-full flex items-center gap-3 px-4 py-3.5 text-left cursor-pointer bg-transparent border-none',
-                i > 0 && 'border-t border-ink-100',
-              )}
-            >
-              <Icon size={18} className="text-ink-400 flex-none" aria-hidden />
-              <span className="flex-1 text-body-sm font-semibold text-ink-800 text-left">{label}</span>
-              <ChevronRight size={16} className="text-ink-300 flex-none" aria-hidden />
-            </button>
-          ))}
         </div>
 
         {business && (

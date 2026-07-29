@@ -30,6 +30,7 @@ export function useLogin() {
   const [params] = useSearchParams()
 
   return useMutation({
+    meta: { inlineError: true },
     mutationFn: (data: LoginFormData) => authApi.login(data.email, data.password),
     onSuccess: async ({ data }) => {
       setAuth(data.user, data.accessToken)
@@ -53,6 +54,7 @@ export function useRegister() {
   const [params] = useSearchParams()
 
   return useMutation({
+    meta: { inlineError: true },
     mutationFn: (data: RegisterMutationInput) =>
       authApi.register(data.name, data.userName, data.email, data.password),
     onSuccess: ({ data }, variables) => {
@@ -67,6 +69,7 @@ export function useRegister() {
 
 export function useForgotPassword() {
   return useMutation({
+    meta: { inlineError: true },
     mutationFn: (data: ForgotPasswordFormData) => authApi.forgotPassword(data.email),
   })
 }
@@ -75,6 +78,7 @@ export function useForgotPassword() {
 // contraseña nueva, así que la pantalla confirma y ofrece ir al login.
 export function useResetPassword() {
   return useMutation({
+    meta: { inlineError: true },
     mutationFn: ({ token, newPassword }: { token: string; newPassword: string }) =>
       authApi.resetPassword(token, newPassword),
   })

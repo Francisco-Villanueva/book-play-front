@@ -1,5 +1,5 @@
 import { AlertTriangle, CheckCircle2, Info } from 'lucide-react'
-import type { ToastKind, ToastState } from './useToast'
+import type { ToastKind, ToastState } from '@/shared/store/toastStore'
 
 const ICON = {
   success: CheckCircle2,
@@ -14,13 +14,12 @@ const ACCENT: Record<ToastKind, string> = {
 }
 
 interface ToastProps {
-  toast: ToastState | null
-  onUndo: () => void
+  toast: ToastState
+  onDismiss: () => void
 }
 
 // Arriba y no abajo: abajo compite con la barra de pestañas y el FAB.
-export function Toast({ toast, onUndo }: ToastProps) {
-  if (!toast) return null
+export function Toast({ toast, onDismiss }: ToastProps) {
   const Icon = ICON[toast.kind]
 
   return (
@@ -37,7 +36,7 @@ export function Toast({ toast, onUndo }: ToastProps) {
           type="button"
           onClick={() => {
             toast.onUndo?.()
-            onUndo()
+            onDismiss()
           }}
           className="flex-none border-none bg-transparent text-green-300 font-body font-bold text-caption cursor-pointer"
         >

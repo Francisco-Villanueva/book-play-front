@@ -103,8 +103,9 @@ export function PlayerAppShell({ children }: PlayerAppShellProps) {
             {children}
           </main>
           <nav
-            className="md:hidden flex-none flex items-center bg-white border-t border-ink-100"
-            style={{ height: 'var(--tabbar-h)', boxShadow: '0 -4px 16px -10px rgba(19,26,31,.2)' }}
+            className="md:hidden flex-none flex bg-white border-t border-ink-100"
+            style={{ height: 'var(--tabbar-h)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+            aria-label="Secciones"
           >
             {NAV.map(({ key, icon: Icon, label }) => {
               const active = pathname.startsWith(key)
@@ -112,21 +113,17 @@ export function PlayerAppShell({ children }: PlayerAppShellProps) {
                 <button
                   key={key}
                   type="button"
+                  aria-current={active ? 'page' : undefined}
                   onClick={() => navigate(key)}
-                  aria-label={label}
                   className={cn(
-                    'flex-1 flex flex-col items-center justify-center gap-0.5 h-full',
-                    'font-body text-overline font-bold uppercase tracking-wider cursor-pointer',
-                    'border-none bg-transparent transition-colors duration-[120ms]',
+                    'flex-1 flex flex-col items-center justify-center gap-1 border-none bg-transparent cursor-pointer',
                     active ? 'text-green-600' : 'text-ink-400',
                   )}
                 >
-                  <Icon
-                    size={22}
-                    strokeWidth={active ? 2.4 : 2}
-                    aria-hidden
-                  />
-                  {label}
+                  <Icon size={23} strokeWidth={active ? 2.4 : 2} aria-hidden />
+                  <span className={cn('text-[11px] font-body', active ? 'font-bold' : 'font-semibold')}>
+                    {label}
+                  </span>
                 </button>
               )
             })}

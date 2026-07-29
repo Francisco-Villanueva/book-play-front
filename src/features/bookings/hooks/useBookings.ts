@@ -50,6 +50,7 @@ export function useMyBooking(bookingId: string | undefined) {
 export function useCancelMyBooking() {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { inlineError: true },
     mutationFn: (bookingId: string) => bookingsApi.cancelMine(bookingId),
     onSuccess: (_res, bookingId) => {
       queryClient.invalidateQueries({ queryKey: bookingsKeys.mine })
@@ -91,6 +92,7 @@ interface CreateBookingInput {
 export function useCreateBooking(businessId: string) {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { inlineError: true },
     mutationFn: (data: CreateBookingInput) => bookingsApi.createBooking(businessId, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: bookingsKeys.all(businessId) }),
   })
@@ -99,6 +101,7 @@ export function useCreateBooking(businessId: string) {
 export function useCancelBooking(businessId: string) {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { inlineError: true },
     mutationFn: (bookingId: string) => bookingsApi.cancelBooking(businessId, bookingId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: bookingsKeys.all(businessId) }),
   })
@@ -107,6 +110,7 @@ export function useCancelBooking(businessId: string) {
 export function useUpdateBookingPayment(businessId: string) {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { inlineError: true },
     mutationFn: ({ bookingId, ...data }: UpdateBookingPaymentInput & { bookingId: string }) =>
       bookingsApi.updatePayment(businessId, bookingId, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: bookingsKeys.all(businessId) }),
@@ -129,6 +133,7 @@ export function useGuestCancellation(
 export function useCancelGuestBooking(businessId: string | undefined, bookingId: string | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { inlineError: true },
     mutationFn: (token: string) => bookingsApi.cancelGuestBooking(businessId!, bookingId!, token),
     onSuccess: (_res, token) => {
       queryClient.invalidateQueries({ queryKey: bookingsKeys.guestCancellation(businessId!, bookingId!, token) })

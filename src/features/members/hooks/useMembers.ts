@@ -14,6 +14,7 @@ export function useMembers(businessId: string | undefined) {
 export function useInviteMember(businessId: string) {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { inlineError: true },
     mutationFn: (data: InviteByEmailPayload) => membersApi.inviteByEmail(businessId, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: membersKeys.all(businessId) }),
   })
@@ -47,6 +48,7 @@ export function useInvitation(token: string | null) {
 
 export function useAcceptInvitation() {
   return useMutation({
+    meta: { inlineError: true },
     mutationFn: (token: string) => membersApi.acceptInvitation(token),
   })
 }

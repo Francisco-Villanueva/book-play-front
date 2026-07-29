@@ -6,6 +6,11 @@ export interface UpdateProfilePayload {
   phone?: string
 }
 
+export interface UserPreferences {
+  /** Correos de confirmación y cancelación de reserva. */
+  notifyBookings: boolean
+}
+
 export const usersApi = {
   // /users/me (not /auth/me) is the endpoint that also resolves the user's business
   // memberships — required to know whether a PLAYER also administers a business.
@@ -19,4 +24,14 @@ export const usersApi = {
     apiClient
       .patch<{ user: User }>('/users/me', data)
       .then((response) => ({ ...response, data: response.data.user })),
+
+  preferences: () =>
+    apiClient
+      .get<{ preferences: UserPreferences }>('/users/me/preferences')
+      .then((response) => ({ ...response, data: response.data.preferences })),
+
+  updatePreferences: (data: Partial<UserPreferences>) =>
+    apiClient
+      .patch<{ preferences: UserPreferences }>('/users/me/preferences', data)
+      .then((response) => ({ ...response, data: response.data.preferences })),
 }

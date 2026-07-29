@@ -11,8 +11,7 @@ import { hFmt, initials, PAYMENT_META } from '../reservationTypes'
 import { MobileBookingDetail } from './MobileBookingDetail'
 import { MobilePaymentSheet } from './MobilePaymentSheet'
 import { ConfirmDialog, type ConfirmRequest } from './ConfirmDialog'
-import { Toast } from './Toast'
-import { useToast } from './useToast'
+import { flashToast } from '@/shared/store/toastStore'
 import type { MobileBooking } from './mobileTypes'
 
 type FilterKey = 'proximas' | 'hoy' | 'sinpagar' | 'canceladas'
@@ -56,7 +55,6 @@ export function MobileReservationsScreen({ businessId }: MobileReservationsScree
   const [detail, setDetail] = useState<MobileBooking | null>(null)
   const [collect, setCollect] = useState<MobileBooking | null>(null)
   const [confirm, setConfirm] = useState<ConfirmRequest | null>(null)
-  const { toast, flash, dismiss } = useToast()
 
   const cancelBooking = useCancelBooking(businessId)
   const { data: courts } = useCourts(businessId)
@@ -92,11 +90,11 @@ export function MobileReservationsScreen({ businessId }: MobileReservationsScree
           onSuccess: () => {
             setConfirm(null)
             setDetail(null)
-            flash('Reserva cancelada')
+            flashToast('Reserva cancelada')
           },
           onError: () => {
             setConfirm(null)
-            flash('No pudimos cancelar la reserva', { kind: 'error' })
+            flashToast('No pudimos cancelar la reserva', { kind: 'error' })
           },
         }),
     })
@@ -190,13 +188,12 @@ export function MobileReservationsScreen({ businessId }: MobileReservationsScree
           onClose={() => setCollect(null)}
           onSaved={(amount) => {
             setCollect(null)
-            flash(`Cobro registrado · ${formatMoneyARS(amount)}`)
+            flashToast(`Cobro registrado · ${formatMoneyARS(amount)}`)
           }}
         />
       )}
 
       <ConfirmDialog request={confirm} onClose={() => setConfirm(null)} pending={cancelBooking.isPending} />
-      <Toast toast={toast} onUndo={dismiss} />
     </div>
   )
 }

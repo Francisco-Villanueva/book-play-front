@@ -22,6 +22,7 @@ interface ExceptionRuleInput {
 export function useCreateExceptionRule(businessId: string) {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { inlineError: true },
     mutationFn: (data: ExceptionRuleInput) => exceptionRulesApi.create(businessId, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: exceptionRulesKeys.all(businessId) }),
   })
@@ -30,6 +31,7 @@ export function useCreateExceptionRule(businessId: string) {
 export function useDeleteExceptionRule(businessId: string) {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { inlineError: true },
     mutationFn: (ruleId: string) => exceptionRulesApi.remove(businessId, ruleId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: exceptionRulesKeys.all(businessId) }),
   })

@@ -18,8 +18,7 @@ import { MobilePaymentSheet } from './MobilePaymentSheet'
 import { MobileBlockSheet } from './MobileBlockSheet'
 import { MobileResumenScreen } from './MobileResumenScreen'
 import { ConfirmDialog, type ConfirmRequest } from './ConfirmDialog'
-import { Toast } from './Toast'
-import { useToast } from './useToast'
+import { flashToast } from '@/shared/store/toastStore'
 import { freeCountAt, type MobileBooking } from './mobileTypes'
 
 type AgendaView = 'horarios' | 'cancha'
@@ -50,7 +49,6 @@ export function MobileAgendaScreen({ businessId }: MobileAgendaScreenProps) {
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const nowRef = useRef<HTMLDivElement>(null)
-  const { toast, flash, dismiss } = useToast()
 
   const { courts, courtPrices, courtDurations, bookings, isLoading, isError } = useAgendaDay(businessId, date)
   const cancelBooking = useCancelBooking(businessId)
@@ -135,11 +133,11 @@ export function MobileAgendaScreen({ businessId }: MobileAgendaScreenProps) {
           onSuccess: () => {
             setConfirm(null)
             setDetailId(null)
-            flash('Reserva cancelada')
+            flashToast('Reserva cancelada')
           },
           onError: () => {
             setConfirm(null)
-            flash('No pudimos cancelar la reserva', { kind: 'error' })
+            flashToast('No pudimos cancelar la reserva', { kind: 'error' })
           },
         }),
     })
@@ -156,11 +154,11 @@ export function MobileAgendaScreen({ businessId }: MobileAgendaScreenProps) {
           onSuccess: () => {
             setConfirm(null)
             setDetailId(null)
-            flash('Bloqueo quitado')
+            flashToast('Bloqueo quitado')
           },
           onError: () => {
             setConfirm(null)
-            flash('No pudimos quitar el bloqueo', { kind: 'error' })
+            flashToast('No pudimos quitar el bloqueo', { kind: 'error' })
           },
         }),
     })
@@ -329,7 +327,7 @@ export function MobileAgendaScreen({ businessId }: MobileAgendaScreenProps) {
           onClose={() => setNewBooking(null)}
           onSaved={(guestName) => {
             setNewBooking(null)
-            flash(`Reserva confirmada · ${guestName}`)
+            flashToast(`Reserva confirmada · ${guestName}`)
           }}
         />
       )}
@@ -354,7 +352,7 @@ export function MobileAgendaScreen({ businessId }: MobileAgendaScreenProps) {
           onClose={() => setCollectId(null)}
           onSaved={(amount) => {
             setCollectId(null)
-            flash(`Cobro registrado · ${formatMoneyARS(amount)}`)
+            flashToast(`Cobro registrado · ${formatMoneyARS(amount)}`)
           }}
         />
       )}
@@ -367,7 +365,7 @@ export function MobileAgendaScreen({ businessId }: MobileAgendaScreenProps) {
           onClose={() => setBlockTarget(null)}
           onSaved={() => {
             setBlockTarget(null)
-            flash('Turno bloqueado')
+            flashToast('Turno bloqueado')
           }}
         />
       )}
@@ -380,7 +378,6 @@ export function MobileAgendaScreen({ businessId }: MobileAgendaScreenProps) {
         onClose={() => setConfirm(null)}
         pending={cancelBooking.isPending || deleteException.isPending}
       />
-      <Toast toast={toast} onUndo={dismiss} />
     </div>
   )
 }
