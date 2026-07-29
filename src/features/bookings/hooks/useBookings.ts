@@ -67,6 +67,17 @@ export function useAvailability(businessId: string | undefined, courtId: string 
   })
 }
 
+// Disponibilidad de todas las canchas del complejo para un día. Es la fuente de
+// verdad de "¿hay lugar?": ya resuelve excepciones > reglas > reservas (BR-007).
+export function useBusinessAvailability(businessId: string | undefined, date: string | undefined) {
+  return useQuery({
+    queryKey: bookingsKeys.businessAvailability(businessId ?? '', date ?? ''),
+    queryFn: () => bookingsApi.getBusinessAvailability(businessId!, date!).then((res) => res.data),
+    enabled: !!businessId && !!date,
+    staleTime: 0,
+  })
+}
+
 interface CreateBookingInput {
   courtId: string
   date: string

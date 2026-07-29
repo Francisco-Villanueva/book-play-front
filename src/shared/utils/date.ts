@@ -35,6 +35,14 @@ export function formatLongDateEs(iso: string): string {
   return `${WEEKDAYS_LONG[d.getDay()]} ${d.getDate()} de ${MONTHS[d.getMonth()]}`
 }
 
+// "sáb 30 ago" — la fecha completa pero corta, para headers angostos.
+export function shortDateLabel(iso: string): string {
+  const d = new Date(iso + 'T12:00:00')
+  const weekday = (WEEKDAYS_SHORT[d.getDay()] ?? '').toLowerCase()
+  const month = (MONTHS[d.getMonth()] ?? '').slice(0, 3)
+  return `${weekday} ${d.getDate()} ${month}`
+}
+
 export function relativeDayLabel(iso: string): string {
   const today = todayISO()
   if (iso === today) return 'Hoy'

@@ -26,6 +26,8 @@ import { useCourts } from "@/features/courts/hooks/useCourts";
 import { useSubscriptionAccess } from "@/features/billing/hooks/useBilling";
 import { courtColor } from "./courtTypes";
 import { NewBookingModal } from "./NewBookingModal";
+import { AdminMobileChrome } from "./mobile/AdminMobileChrome";
+import { useIsMobile } from "@/shared/hooks/useMediaQuery";
 import { todayISO } from "@/shared/utils/date";
 
 const NAV = [
@@ -62,6 +64,7 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
   const { pathname } = useLocation();
   const { user, logout } = useAuthStore();
   const { sidebarOpen } = useAdminStore();
+  const isMobile = useIsMobile();
   const [expiryBannerDismissed, setExpiryBannerDismissed] = useState(false);
   const [newBookingOpen, setNewBookingOpen] = useState(false);
 
@@ -102,6 +105,12 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
     logout();
     navigate("/login");
   };
+
+  // Por debajo de `md` el panel cambia de shell entero: barra de pestañas y hojas
+  // en vez de sidebar y modales. El título y el subtítulo los pone cada pantalla.
+  if (isMobile) {
+    return <AdminMobileChrome>{children}</AdminMobileChrome>;
+  }
 
   return (
     <div className="flex h-full" style={{ background: "var(--surface-page)" }}>

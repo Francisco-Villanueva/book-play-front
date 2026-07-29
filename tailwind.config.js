@@ -94,6 +94,35 @@ export default {
         'ease-spring': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
         'ease-out-expo': 'cubic-bezier(0.22, 1, 0.36, 1)',
       },
+      keyframes: {
+        'sheet-in': {
+          from: { transform: 'translateY(100%)' },
+          to: { transform: 'translateY(0)' },
+        },
+        'backdrop-in': {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        'toast-in': {
+          from: { transform: 'translateY(-14px)', opacity: '0' },
+          to: { transform: 'translateY(0)', opacity: '1' },
+        },
+        'dialog-in': {
+          from: { transform: 'scale(0.92)', opacity: '0' },
+          to: { transform: 'scale(1)', opacity: '1' },
+        },
+        'screen-in': {
+          from: { transform: 'translateX(14%)', opacity: '0.4' },
+          to: { transform: 'translateX(0)', opacity: '1' },
+        },
+      },
+      animation: {
+        'sheet-in': 'sheet-in 280ms cubic-bezier(0.22, 1, 0.36, 1)',
+        'backdrop-in': 'backdrop-in 180ms cubic-bezier(0.22, 1, 0.36, 1)',
+        'toast-in': 'toast-in 280ms cubic-bezier(0.22, 1, 0.36, 1)',
+        'dialog-in': 'dialog-in 180ms cubic-bezier(0.22, 1, 0.36, 1)',
+        'screen-in': 'screen-in 180ms cubic-bezier(0.22, 1, 0.36, 1)',
+      },
     },
   },
   plugins: [],

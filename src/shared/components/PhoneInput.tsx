@@ -11,10 +11,13 @@ interface PhoneInputProps {
   error?: string | undefined
   required?: boolean | undefined
   id?: string | undefined
+  // `lg` sube la tipografía a 16px: por debajo de eso iOS hace zoom al enfocar,
+  // que en las pantallas mobile rompe el layout.
+  size?: 'md' | 'lg' | undefined
 }
 
 export function PhoneInput({
-  value, onChange, onBlur, label, helperText, error, required, id: propId,
+  value, onChange, onBlur, label, helperText, error, required, id: propId, size = 'md',
 }: PhoneInputProps) {
   const generatedId = useId()
   const id = propId ?? generatedId
@@ -39,8 +42,9 @@ export function PhoneInput({
         onBlur={onBlur}
         aria-required={required}
         className={cn(
-          'w-full px-3.5 py-3 rounded-md font-body text-body-sm text-ink-900',
-          'bg-white border border-ink-200 outline-none',
+          'w-full px-3.5 rounded-md font-body text-ink-900',
+          size === 'lg' ? 'h-[50px] text-[16px] border-[1.5px]' : 'py-3 text-body-sm border',
+          'bg-white border-ink-200 outline-none',
           'transition-colors duration-[120ms] placeholder:text-ink-400',
           'focus:border-green-500 focus:ring-2 focus:ring-[rgba(31,194,116,0.2)]',
           error && 'border-red-500 focus:border-red-500 focus:ring-red-100',

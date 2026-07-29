@@ -6,13 +6,16 @@ import { DashboardAgenda } from '@/features/admin/components/dashboard/Dashboard
 import { AttentionPanel } from '@/features/admin/components/dashboard/AttentionPanel'
 import { TrendChart } from '@/features/admin/components/dashboard/TrendChart'
 import { computeKpis, computeTimeline, computeTrend, computeAttention } from '@/features/admin/components/dashboard/dashboardData'
+import { MobileAgendaScreen } from '@/features/admin/components/mobile/MobileAgendaScreen'
 import { useBookings } from '@/features/bookings/hooks/useBookings'
 import { useCourts } from '@/features/courts/hooks/useCourts'
+import { useIsMobile } from '@/shared/hooks/useMediaQuery'
 import { addDaysISO, formatLongDateEs, timeToHours, todayISO } from '@/shared/utils/date'
 
 export default function AdminDashboardPage() {
   const { businessId } = useParams<{ businessId: string }>()
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const today = todayISO()
   // El panel sólo mira hoy (KPIs, timeline, avisos) y los 7 días previos
   // (tendencia y promedio de ingresos). Pedir más sería traer historial al pedo.
@@ -31,6 +34,16 @@ export default function AdminDashboardPage() {
   const nowHours = timeToHours(new Date().toTimeString().slice(0, 5))
 
   const goToAgenda = () => navigate(`/admin/${businessId}/agenda`)
+
+  // En mobile la home del panel es la agenda: el resumen se abre desde su tira
+  // de métricas, no ocupa la primera pantalla.
+  if (isMobile) {
+    return (
+      <AdminShell title="Agenda" subtitle={formatLongDateEs(today)}>
+        <MobileAgendaScreen businessId={businessId ?? ''} />
+      </AdminShell>
+    )
+  }
 
   return (
     <AdminShell title="Resumen" subtitle={formatLongDateEs(today)}>

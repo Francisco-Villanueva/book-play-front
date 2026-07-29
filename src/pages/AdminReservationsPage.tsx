@@ -9,6 +9,8 @@ import {
   STATUS_META, PAYMENT_META, paymentDetail, hFmt, durationLabel, priceLabel, initials,
 } from '@/features/admin/components/reservationTypes'
 import { PaymentModal } from '@/features/admin/components/PaymentModal'
+import { MobileReservationsScreen } from '@/features/admin/components/mobile/MobileReservationsScreen'
+import { useIsMobile } from '@/shared/hooks/useMediaQuery'
 import { useBookings, useBookingsPage, useCancelBooking } from '@/features/bookings/hooks/useBookings'
 import { courtColor } from '@/features/admin/components/courtTypes'
 import { addDaysISO, relativeDayLabel, timeToHours, todayISO } from '@/shared/utils/date'
@@ -69,6 +71,7 @@ function dateParam(filter: (typeof DATE_OPTS)[number]): string | undefined {
 
 export default function AdminReservationsPage() {
   const { businessId } = useParams<{ businessId: string }>()
+  const isMobile = useIsMobile()
   const cancelBooking = useCancelBooking(businessId ?? '')
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -133,6 +136,14 @@ export default function AdminReservationsPage() {
   const handleCancel = () => {
     if (!selected) return
     cancelBooking.mutate(selected, { onSuccess: () => setSelected(null) })
+  }
+
+  if (isMobile) {
+    return (
+      <AdminShell title="Reservas">
+        <MobileReservationsScreen businessId={businessId ?? ''} />
+      </AdminShell>
+    )
   }
 
   return (
