@@ -19,6 +19,7 @@ import AdminReservationsPage from '@/pages/AdminReservationsPage'
 import AdminClientsPage from '@/pages/AdminClientsPage'
 import AdminSettingsPage from '@/pages/AdminSettingsPage'
 import AdminMorePage from '@/pages/AdminMorePage'
+import AdminProfilePage from '@/pages/AdminProfilePage'
 import PublicBookingPage from '@/pages/PublicBookingPage'
 import AcceptInvitationPage from '@/pages/AcceptInvitationPage'
 import GuestBookingCancelPage from '@/pages/GuestBookingCancelPage'
@@ -88,6 +89,7 @@ export const router = createBrowserRouter([
           { path: '/admin/:businessId/tournaments',        element: <AdminTournamentsPage /> },
           { path: '/admin/:businessId/settings',           element: <AdminSettingsPage /> },
           { path: '/admin/:businessId/mas',                element: <AdminMorePage /> },
+          { path: '/admin/:businessId/perfil',             element: <AdminProfilePage /> },
           { path: '/admin/:businessId/upgrade',            element: <PricingPage /> },
           { path: '/admin/:businessId/upgrade/confirm',    element: <UpgradeConfirmationPage /> },
           { path: '/admin/:businessId/suspended',          element: <ConversionWallPage /> },

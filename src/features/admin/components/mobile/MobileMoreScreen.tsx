@@ -44,7 +44,7 @@ const GROUPS: MoreGroup[] = [
   {
     label: 'Cuenta',
     items: [
-      { key: 'perfil', icon: User, label: 'Mi perfil', path: '/profile' },
+      { key: 'perfil', icon: User, label: 'Mi perfil', path: '/perfil' },
       { key: 'cambiar', icon: Repeat, label: 'Cambiar de complejo' },
     ],
   },
@@ -70,8 +70,7 @@ export function MobileMoreScreen() {
       setPickerOpen(true)
       return
     }
-    // El perfil es global, no vive bajo el complejo.
-    navigate(item.path === '/profile' ? '/profile' : base + item.path)
+    navigate(base + item.path)
   }
 
   return (
