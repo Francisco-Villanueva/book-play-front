@@ -1,4 +1,4 @@
-import { Calendar, Clock, MapPin, Phone, Repeat } from 'lucide-react'
+import { Calendar, Clock, Mail, MapPin, Phone, Repeat } from 'lucide-react'
 import { Button } from '@/shared/components/Button'
 import { formatLongDateEs, weekdayNameEs } from '@/shared/utils/date'
 import type { RecurringBooking } from '@/shared/types/domain'
@@ -6,9 +6,10 @@ import type { RecurringBooking } from '@/shared/types/domain'
 interface RecurringSeriesCardProps {
   series: RecurringBooking
   onEnd: (series: RecurringBooking) => void
+  onResendLink: (series: RecurringBooking) => void
 }
 
-export function RecurringSeriesCard({ series, onEnd }: RecurringSeriesCardProps) {
+export function RecurringSeriesCard({ series, onEnd, onResendLink }: RecurringSeriesCardProps) {
   const isActive = series.status === 'ACTIVE'
 
   return (
@@ -55,16 +56,37 @@ export function RecurringSeriesCard({ series, onEnd }: RecurringSeriesCardProps)
             ? `Reservado hasta el ${formatLongDateEs(series.generatedUntil)}`
             : `Terminó el ${formatLongDateEs(series.endDate ?? series.generatedUntil)}`}
         </p>
+
+        {isActive && !series.guestEmail && (
+          <p className="text-[11px] text-amber-700 mt-1">
+            Sin correo: el cliente no puede ver ni gestionar sus fechas.
+          </p>
+        )}
       </div>
 
       {isActive && (
-        <Button
-          variant="outline"
-          onClick={() => onEnd(series)}
-          data-testid={`recurring-end-${series.id}`}
-        >
-          Terminar
-        </Button>
+        <div className="flex gap-2 flex-none">
+          <Button
+            variant="ghost"
+            onClick={() => onResendLink(series)}
+            data-testid={`recurring-resend-${series.id}`}
+            title={
+              series.guestEmail
+                ? `Reenviar el link a ${series.guestEmail}`
+                : 'Este turno fijo no tiene correo cargado'
+            }
+          >
+            <Mail size={15} aria-hidden />
+            <span className="ml-1.5">{series.guestEmail ? 'Reenviar link' : 'Cargar correo'}</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => onEnd(series)}
+            data-testid={`recurring-end-${series.id}`}
+          >
+            Terminar
+          </Button>
+        </div>
       )}
     </li>
   )

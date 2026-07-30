@@ -37,6 +37,9 @@ export interface Business {
   // Plantillas para canchas nuevas — la duración y el precio que rigen son los de cada cancha.
   defaultSlotDuration: number
   defaultPricePerSlot?: number | null
+  // Antelación mínima con la que el cliente puede cancelar. 0 = sin restricción.
+  // No limita al staff del complejo (BR-019).
+  cancellationDeadlineHours: number
   createdAt: string
 }
 
@@ -166,6 +169,23 @@ export interface RecurringGenerationReport {
   generatedUntil: string
 }
 
+export type NotificationType =
+  | 'BOOKING_CANCELLED_BY_CLIENT'
+  | 'RECURRING_INSTANCE_CANCELLED_BY_CLIENT'
+
+// Notificación del panel del complejo. Es por negocio, no por usuario: la ve
+// todo el equipo y se marca como leída para todos.
+export interface Notification {
+  id: string
+  businessId: string
+  type: NotificationType
+  title: string
+  body: string
+  bookingId?: string | null
+  readAt?: string | null
+  createdAt: string
+}
+
 // Reservas que se caerían al aplicar un bloqueo (ExceptionRule) — BR-029.
 export interface AffectedBooking {
   id: string
@@ -185,6 +205,10 @@ export interface GuestCancellationInfo {
   date: string
   startTime: string
   endTime: string
+  // El servidor resuelve si todavía está dentro del plazo (BR-019): el reloj del
+  // cliente no es confiable para decidirlo.
+  cancellationDeadlineHours: number
+  canCancel: boolean
 }
 
 export interface AvailabilityRule {

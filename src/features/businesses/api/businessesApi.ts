@@ -25,6 +25,7 @@ interface UpdateBusinessPayload {
   timezone?: string | undefined
   defaultSlotDuration?: number | undefined
   defaultPricePerSlot?: number | null | undefined
+  cancellationDeadlineHours?: number | undefined
 }
 
 interface UpdateBusinessResponse {

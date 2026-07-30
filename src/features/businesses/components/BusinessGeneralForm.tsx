@@ -30,6 +30,7 @@ export function BusinessGeneralForm({ businessId }: BusinessGeneralFormProps) {
   const [form, setForm] = useState({
     name: '', address: '', phone: '', email: '',
     defaultSlotDuration: 60, defaultPricePerSlot: '', timezone: TIMEZONES[0]!.value,
+    cancellationDeadlineHours: 24,
   })
   const [saved, setSaved] = useState(false)
 
@@ -43,6 +44,7 @@ export function BusinessGeneralForm({ businessId }: BusinessGeneralFormProps) {
       defaultSlotDuration: business.defaultSlotDuration,
       defaultPricePerSlot: business.defaultPricePerSlot != null ? String(business.defaultPricePerSlot) : '',
       timezone: business.timezone,
+      cancellationDeadlineHours: business.cancellationDeadlineHours ?? 24,
     })
   }, [business])
 
@@ -135,6 +137,37 @@ export function BusinessGeneralForm({ businessId }: BusinessGeneralFormProps) {
               onChange={(e) => upd('defaultPricePerSlot', e.target.value)}
             />
           </div>
+        </div>
+      </section>
+
+      <section className="mb-7">
+        <h3 className={SECTION_TITLE}>Cancelaciones</h3>
+        <p className="text-[12px] text-ink-500 -mt-1.5 mb-3.5">
+          Con cuánta antelación puede cancelar <strong>el cliente</strong>. Vos y tu equipo
+          pueden cancelar siempre, sin límite de tiempo.
+        </p>
+        <div className="max-w-[283px]">
+          <label htmlFor="biz-cancel-deadline" className={LABEL}>
+            Antelación mínima
+          </label>
+          <select
+            id="biz-cancel-deadline"
+            className={FIELD}
+            value={form.cancellationDeadlineHours}
+            onChange={(e) => upd('cancellationDeadlineHours', Number(e.target.value))}
+          >
+            <option value={0}>Sin restricción</option>
+            {[1, 2, 3, 6, 12, 24, 48, 72].map((h) => (
+              <option key={h} value={h}>
+                {h === 1 ? '1 hora antes' : `${h} horas antes`}
+              </option>
+            ))}
+          </select>
+          <p className="text-[12px] text-ink-500 mt-1.5">
+            {form.cancellationDeadlineHours === 0
+              ? 'El cliente puede cancelar hasta el momento del turno.'
+              : `Pasadas esas horas, el cliente tiene que comunicarse con el complejo.`}
+          </p>
         </div>
       </section>
 

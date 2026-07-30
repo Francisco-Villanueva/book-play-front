@@ -336,16 +336,23 @@ export function MobileNewBookingSheet({
           {isFixed && (
             <div className="mb-4">
               <label htmlFor="mobile-booking-email" className="block text-[12.5px] font-bold text-ink-700 mb-1.5">
-                Email <span className="font-medium text-ink-400">(opcional)</span>
+                Email
               </label>
               <input
                 id="mobile-booking-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Para mandarle el detalle del turno fijo"
+                placeholder="cliente@ejemplo.com"
                 className="w-full h-[50px] px-3.5 rounded-md border-[1.5px] border-ink-200 bg-white font-body text-[16px] text-ink-900 outline-none focus:border-green-500"
               />
+              {/* El correo es el único canal por el que el cliente recibe el
+                  link a sus fechas: sin él queda dependiendo del mostrador. */}
+              <p className="text-[12px] text-ink-500 mt-1.5">
+                {email.trim()
+                  ? 'Le mandamos el detalle y un link para gestionar sus fechas.'
+                  : 'Sin correo no va a poder ver ni dar de baja sus fechas.'}
+              </p>
             </div>
           )}
 

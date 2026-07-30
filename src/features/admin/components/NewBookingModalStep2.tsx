@@ -112,13 +112,22 @@ export function NewBookingModalStep2({
             <PhoneInput label="Teléfono" value={phone} onChange={setPhone} required />
             {type === 'fixed' && (
               <>
-                <Input
-                  label="Email (opcional)"
-                  type="email"
-                  placeholder="Para mandarle el detalle del turno fijo"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <div>
+                  <Input
+                    label="Email"
+                    type="email"
+                    placeholder="cliente@ejemplo.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  {/* No es un campo opcional cualquiera: el correo es el único
+                      canal por el que el cliente recibe el link a sus fechas. */}
+                  <p className="text-[12px] text-ink-500 mt-1">
+                    {email.trim()
+                      ? 'Le mandamos el detalle y un link para gestionar sus fechas.'
+                      : 'Sin correo el cliente no va a poder ver ni dar de baja sus fechas — vas a tener que hacerlo vos.'}
+                  </p>
+                </div>
                 <Input
                   label="Hasta (opcional)"
                   type="date"

@@ -61,6 +61,18 @@ export default function GuestBookingCancelPage() {
 
               {booking.status === 'CANCELLED' ? (
                 <p className="text-center text-body-sm text-ink-500 py-4">Esta reserva ya estaba cancelada.</p>
+              ) : !booking.canCancel ? (
+                <div className="bg-amber-50 border border-amber-100 rounded-lg p-3.5 flex items-start gap-2">
+                  <AlertTriangle size={16} className="text-amber-600 flex-none mt-0.5" aria-hidden />
+                  <p className="text-[13px] text-amber-800">
+                    Ya pasó el plazo para cancelar online: este complejo pide{' '}
+                    <strong>
+                      {booking.cancellationDeadlineHours}{' '}
+                      {booking.cancellationDeadlineHours === 1 ? 'hora' : 'horas'}
+                    </strong>{' '}
+                    de antelación. Comunicate con {booking.businessName} para cancelarla.
+                  </p>
+                </div>
               ) : confirming ? (
                 <div className="bg-red-50 border border-red-100 rounded-lg p-3.5 flex flex-col gap-3">
                   <div className="flex items-start gap-2">

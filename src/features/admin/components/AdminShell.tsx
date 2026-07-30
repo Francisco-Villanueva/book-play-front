@@ -27,6 +27,12 @@ import { useCourts } from "@/features/courts/hooks/useCourts";
 import { useSubscriptionAccess } from "@/features/billing/hooks/useBilling";
 import { courtColor } from "./courtTypes";
 import { NewBookingModal } from "./NewBookingModal";
+import { NotificationsPanel } from "@/features/notifications/components/NotificationsPanel";
+import {
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useNotifications,
+} from "@/features/notifications/hooks/useNotifications";
 import { AdminMobileChrome } from "./mobile/AdminMobileChrome";
 import { useIsMobile } from "@/shared/hooks/useMediaQuery";
 import { todayISO } from "@/shared/utils/date";
@@ -76,6 +82,13 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
 
   const [expiryBannerDismissed, setExpiryBannerDismissed] = useState(false);
   const [newBookingOpen, setNewBookingOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  const { data: notifications, isLoading: notificationsLoading } =
+    useNotifications(businessId);
+  const markRead = useMarkNotificationRead(businessId ?? "");
+  const markAllRead = useMarkAllNotificationsRead(businessId ?? "");
+  const unreadCount = notifications?.unreadCount ?? 0;
 
   // El aviso lo ven los tres roles; sólo el OWNER puede pagar.
   const { data: access } = useSubscriptionAccess(businessId);
@@ -209,9 +222,43 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
                 Buscar reserva o cliente…
               </span>
             </div>
-            <IconButton variant="outline" aria-label="Notificaciones">
-              <Bell size={18} />
-            </IconButton>
+            <div className="relative">
+              <IconButton
+                variant="outline"
+                aria-label={
+                  unreadCount > 0
+                    ? `Notificaciones (${unreadCount} sin leer)`
+                    : "Notificaciones"
+                }
+                aria-expanded={notificationsOpen}
+                onClick={() => setNotificationsOpen((v) => !v)}
+                data-testid="notifications-bell"
+              >
+                <Bell size={18} />
+              </IconButton>
+              {unreadCount > 0 && (
+                <span
+                  aria-hidden
+                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[10px] font-extrabold flex items-center justify-center pointer-events-none"
+                >
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+              {notificationsOpen && (
+                <NotificationsPanel
+                  notifications={notifications?.data ?? []}
+                  unreadCount={unreadCount}
+                  isLoading={notificationsLoading}
+                  onClose={() => setNotificationsOpen(false)}
+                  onMarkAllRead={() => markAllRead.mutate()}
+                  onSelect={(n) => {
+                    if (!n.readAt) markRead.mutate(n.id);
+                    setNotificationsOpen(false);
+                    navigate(`${base}/bookings`);
+                  }}
+                />
+              )}
+            </div>
             <Button
               leftIcon={<Plus size={18} aria-hidden />}
               onClick={() => setNewBookingOpen(true)}

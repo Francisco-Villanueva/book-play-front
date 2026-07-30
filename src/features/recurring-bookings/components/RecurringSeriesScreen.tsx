@@ -4,9 +4,12 @@ import { SegmentedControl } from '@/shared/components/SegmentedControl'
 import { ConfirmDialog, type ConfirmRequest } from '@/features/admin/components/mobile/ConfirmDialog'
 import { flashToast } from '@/shared/store/toastStore'
 import { weekdayNameEs } from '@/shared/utils/date'
+import { Button } from '@/shared/components/Button'
+import { getApiErrorMessage } from '@/shared/utils/apiError'
 import {
   useEndRecurring,
   useRecurringBookings,
+  useResendGuestLink,
 } from '../hooks/useRecurringBookings'
 import { RecurringSeriesCard } from './RecurringSeriesCard'
 import type { RecurringBooking } from '@/shared/types/domain'
@@ -21,8 +24,33 @@ export function RecurringSeriesScreen({ businessId }: RecurringSeriesScreenProps
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('Activos')
   const [confirm, setConfirm] = useState<ConfirmRequest | null>(null)
 
+  const [emailPrompt, setEmailPrompt] = useState<RecurringBooking | null>(null)
+  const [emailDraft, setEmailDraft] = useState('')
+
   const { data, isLoading, isError } = useRecurringBookings(businessId)
   const endSeries = useEndRecurring(businessId)
+  const resendLink = useResendGuestLink(businessId)
+
+  const sendLink = (series: RecurringBooking, email?: string) => {
+    resendLink.mutate(
+      { seriesId: series.id, ...(email ? { email } : {}) },
+      {
+        onSuccess: (res) => {
+          setEmailPrompt(null)
+          setEmailDraft('')
+          flashToast(`Link enviado a ${res.sentTo}`)
+        },
+      },
+    )
+  }
+
+  // Sin correo cargado no hay a dónde mandarlo: se pide en el momento y de paso
+  // queda guardado en la serie.
+  const askResend = (series: RecurringBooking) => {
+    if (series.guestEmail) return sendLink(series)
+    setEmailDraft('')
+    setEmailPrompt(series)
+  }
 
   const rows = useMemo(
     () =>
@@ -86,7 +114,7 @@ export function RecurringSeriesScreen({ businessId }: RecurringSeriesScreenProps
       ) : (
         <ul className="flex flex-col gap-2.5">
           {rows.map((s) => (
-            <RecurringSeriesCard key={s.id} series={s} onEnd={askEnd} />
+            <RecurringSeriesCard key={s.id} series={s} onEnd={askEnd} onResendLink={askResend} />
           ))}
         </ul>
       )}
@@ -96,6 +124,54 @@ export function RecurringSeriesScreen({ businessId }: RecurringSeriesScreenProps
         onClose={() => setConfirm(null)}
         pending={endSeries.isPending}
       />
+
+      {emailPrompt && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Enviar el link al cliente"
+          className="fixed inset-0 z-[130] flex items-center justify-center p-6"
+          style={{ background: 'rgba(13,20,25,0.48)' }}
+        >
+          <div className="w-full max-w-[400px] bg-white rounded-xl shadow-xl p-5">
+            <h3 className="font-display font-bold text-[17px] text-ink-900 mb-1">
+              Enviarle el link a {emailPrompt.guestName ?? 'el cliente'}
+            </h3>
+            <p className="text-[13px] text-ink-500 mb-4">
+              Con ese link puede ver sus fechas y dar de baja las semanas que no puede venir.
+              El correo queda guardado en el turno fijo.
+            </p>
+            <label htmlFor="resend-email" className="block text-[12.5px] font-bold text-ink-700 mb-1.5">
+              Correo del cliente
+            </label>
+            <input
+              id="resend-email"
+              type="email"
+              value={emailDraft}
+              onChange={(e) => setEmailDraft(e.target.value)}
+              placeholder="cliente@ejemplo.com"
+              className="w-full h-[46px] px-3.5 rounded-md border-[1.5px] border-ink-200 bg-white font-body text-[15px] text-ink-900 outline-none focus:border-green-500"
+            />
+            {resendLink.isError && (
+              <p className="mt-2 text-caption text-red-600">
+                {getApiErrorMessage(resendLink.error)}
+              </p>
+            )}
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="ghost" onClick={() => setEmailPrompt(null)}>
+                Cancelar
+              </Button>
+              <Button
+                disabled={!emailDraft.includes('@') || resendLink.isPending}
+                onClick={() => sendLink(emailPrompt, emailDraft.trim())}
+                data-testid="recurring-resend-confirm"
+              >
+                {resendLink.isPending ? 'Enviando…' : 'Enviar link'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

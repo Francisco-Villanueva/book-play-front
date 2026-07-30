@@ -89,6 +89,10 @@ export default function GuestRecurringPage() {
                           </span>
                           {cancelled ? (
                             <Badge tone="default">Dada de baja</Badge>
+                          ) : !i.canCancel ? (
+                            <span className="text-[11px] text-ink-400 flex-none text-right max-w-[130px]">
+                              Fuera de plazo · avisale al complejo
+                            </span>
                           ) : confirming === i.id ? (
                             <span className="flex gap-1.5 flex-none">
                               <Button variant="ghost" onClick={() => setConfirming(null)}>
@@ -131,6 +135,16 @@ export default function GuestRecurringPage() {
               <p className="text-[12px] text-ink-500 text-center">
                 Dar de baja una fecha no cancela tu turno fijo: seguís teniendo el horario las demás
                 semanas. Para darlo de baja del todo, hablá con el complejo.
+                {series.cancellationDeadlineHours > 0 && (
+                  <>
+                    {' '}Podés dar de baja hasta{' '}
+                    <strong>
+                      {series.cancellationDeadlineHours}{' '}
+                      {series.cancellationDeadlineHours === 1 ? 'hora' : 'horas'}
+                    </strong>{' '}
+                    antes de cada turno.
+                  </>
+                )}
               </p>
             </div>
           )}

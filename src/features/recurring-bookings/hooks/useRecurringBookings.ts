@@ -37,6 +37,18 @@ export function useRecurringInstances(
   })
 }
 
+export function useResendGuestLink(businessId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    meta: { inlineError: true },
+    mutationFn: ({ seriesId, email }: { seriesId: string; email?: string }) =>
+      recurringBookingsApi.resendLink(businessId, seriesId, email).then((r) => r.data),
+    // Puede haber cargado un correo que antes no estaba.
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: recurringBookingsKeys.all(businessId) }),
+  })
+}
+
 // --- Acceso del cliente sin cuenta, desde el link del correo ---
 
 export function useGuestSeries(

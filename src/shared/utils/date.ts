@@ -25,6 +25,24 @@ export function dayOfWeek(iso: string): number {
   return new Date(iso + 'T12:00:00').getDay()
 }
 
+// "hace 5 min" / "hace 3 h" / "ayer" / "12 ago" — para timestamps de actividad.
+export function relativeTimeEs(iso: string): string {
+  const then = new Date(iso).getTime()
+  if (Number.isNaN(then)) return ''
+  const mins = Math.floor((Date.now() - then) / 60_000)
+
+  if (mins < 1) return 'recién'
+  if (mins < 60) return `hace ${mins} min`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `hace ${hours} h`
+  const days = Math.floor(hours / 24)
+  if (days === 1) return 'ayer'
+  if (days < 7) return `hace ${days} días`
+
+  const d = new Date(then)
+  return `${d.getDate()} ${MONTHS[d.getMonth()]?.slice(0, 3)}`
+}
+
 // "martes" — el día de la semana en plural natural para "todos los ___".
 export function weekdayNameEs(dow: number): string {
   return (WEEKDAYS_LONG[dow] ?? '').toLowerCase()

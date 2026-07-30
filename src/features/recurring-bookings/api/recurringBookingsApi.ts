@@ -15,7 +15,13 @@ export interface GuestSeriesView {
   courtName: string
   dayOfWeek: number
   startTime: string
-  instances: { id: string; date: string; status: BookingStatus }[]
+  cancellationDeadlineHours: number
+  instances: {
+    id: string
+    date: string
+    status: BookingStatus
+    canCancel: boolean
+  }[]
 }
 
 export interface RecurringPreviewInput {
@@ -53,6 +59,14 @@ export const recurringBookingsApi = {
 
   getInstances: (businessId: string, seriesId: string) =>
     apiClient.get<Booking[]>(`${base(businessId)}/${seriesId}/instances`),
+
+  // Emite un token nuevo (invalida el anterior) y reenvía el correo. Es la única
+  // salida cuando el cliente perdió el link o cuando se dio de alta sin correo.
+  resendLink: (businessId: string, seriesId: string, email?: string) =>
+    apiClient.patch<{ sentTo: string }>(
+      `${base(businessId)}/${seriesId}/resend-link`,
+      email ? { email } : {},
+    ),
 
   // Público, validado por el token del correo (sin sesión).
   getForGuest: (businessId: string, seriesId: string, token: string) =>
